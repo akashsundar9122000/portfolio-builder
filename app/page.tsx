@@ -29,7 +29,7 @@ function SectionHead({ id, eyebrow, title, children }: { id: string; eyebrow: st
 
 export default function Home() {
   return (
-    <main className="spot-bg min-h-svh">
+    <main className="spot-bg min-h-svh overflow-x-clip">
       <div className="mx-auto w-[min(1180px,100%-2.5rem)] py-[clamp(3rem,9vh,7rem)]">
         <div className="flex items-center justify-between gap-4">
           <p className="label text-accent">FolioForge · by Akash Sundar</p>
