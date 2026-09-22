@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { ArrowRight, ExternalLink, Eye, Monitor, Smartphone, Tablet, X } from "lucide-react";
 
 /**
- * Three example portfolios. Cards show a live, scaled-down thumbnail of the
- * real rendered site (/samples/<id>); clicking opens it full-size in a
- * dialog with desktop / tablet / phone widths.
+ * Three example portfolios. Cards show a still of the real rendered site;
+ * clicking opens the live site (/samples/<id>) in a dialog with desktop /
+ * tablet / phone widths.
  */
 
 export interface SampleCard {
@@ -22,8 +23,6 @@ const DEVICES = [
   { id: "tablet", label: "Tablet", width: 820, icon: Tablet },
   { id: "phone", label: "Phone", width: 390, icon: Smartphone },
 ] as const;
-
-const THUMB_W = 1280;
 
 export function Samples({ samples }: { samples: SampleCard[] }) {
   const [open, setOpen] = useState<SampleCard | null>(null);
@@ -54,29 +53,15 @@ export function Samples({ samples }: { samples: SampleCard[] }) {
   );
 }
 
+/**
+ * A still of the rendered sample (public/sample-thumbs, made by
+ * scripts/capture-samples.mjs). Live iframes here meant three full
+ * portfolios running at once, which crashed iPhone Safari.
+ */
 function Thumb({ id }: { id: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [w, setW] = useState(360);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  const scale = w / THUMB_W;
   return (
-    <span ref={ref} className="bg-sunken border-hair relative block aspect-[16/10] overflow-hidden border-b" aria-hidden>
-      <iframe
-        src={`/samples/${id}`}
-        title=""
-        tabIndex={-1}
-        loading="lazy"
-        scrolling="no"
-        sandbox="allow-scripts"
-        className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
-        style={{ width: THUMB_W, height: THUMB_W * 0.625, transform: `scale(${scale})` }}
-      />
+    <span className="bg-sunken border-hair relative block aspect-[16/10] overflow-hidden border-b">
+      <Image src={`/sample-thumbs/${id}.jpg`} alt="" fill sizes="(min-width: 768px) 380px, 100vw" className="object-cover object-top" />
     </span>
   );
 }
@@ -84,7 +69,8 @@ function Thumb({ id }: { id: string }) {
 function SampleDialog({ sample, onClose }: { sample: SampleCard; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const [device, setDevice] = useState<(typeof DEVICES)[number]>(DEVICES[0]);
+  // phones open the phone-width view: one small live site instead of a 1280px one scaled down
+  const [device, setDevice] = useState<(typeof DEVICES)[number]>(() => (window.innerWidth < 700 ? DEVICES[2] : DEVICES[0]));
   const [boxW, setBoxW] = useState(1000);
 
   useEffect(() => {
@@ -119,25 +105,26 @@ function SampleDialog({ sample, onClose }: { sample: SampleCard; onClose: () => 
       className="bg-bg text-text m-0 h-dvh max-h-none w-screen max-w-none p-0 backdrop:bg-black/70"
     >
       <div className="flex h-full flex-col">
-        <header className="border-hair flex flex-wrap items-center gap-2 border-b px-3 py-2 sm:px-4" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
+        <header className="border-hair flex items-center gap-2 border-b px-3 py-2 sm:px-4" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
           <div className="mr-auto min-w-0">
             <p className="truncate font-semibold">{sample.name}</p>
             <p className="text-text-3 truncate text-sm">{sample.role} · {sample.themeName} theme</p>
           </div>
-          <div className="flex gap-1" role="radiogroup" aria-label="Preview size">
+          {/* phones only ever show the phone view, so the size switch starts at sm */}
+          <div className="hidden gap-1 sm:flex" role="radiogroup" aria-label="Preview size">
             {DEVICES.map((dv) => (
               <button key={dv.id} type="button" role="radio" aria-checked={device.id === dv.id} aria-label={dv.label} className={`btn size-11 px-0 ${device.id === dv.id ? "border-accent text-accent" : ""}`} onClick={() => setDevice(dv)}>
                 <dv.icon className="size-4" aria-hidden />
               </button>
             ))}
           </div>
-          <a className="btn size-11 px-0" href={`/samples/${sample.id}`} target="_blank" rel="noopener" aria-label="Open in a new tab">
+          <a className="btn hidden size-11 px-0 sm:inline-flex" href={`/samples/${sample.id}`} target="_blank" rel="noopener" aria-label="Open in a new tab">
             <ExternalLink className="size-4" aria-hidden />
           </a>
-          <button type="button" className="btn btn-primary" onClick={createYours}>
+          <button type="button" className="btn btn-primary shrink-0 whitespace-nowrap" onClick={createYours}>
             Create yours <ArrowRight className="size-4" aria-hidden />
           </button>
-          <button type="button" className="btn size-11 px-0" onClick={onClose} aria-label="Close preview" autoFocus>
+          <button type="button" className="btn size-11 shrink-0 px-0" onClick={onClose} aria-label="Close preview" autoFocus>
             <X className="size-4" aria-hidden />
           </button>
         </header>
