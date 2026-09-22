@@ -44,11 +44,8 @@ export default function Home() {
               <span className="grad block">like you</span>
             </h1>
             <p className="text-text-2 mt-7 max-w-[48ch] text-lg leading-relaxed">
-              The cinematic portfolio from{" "}
-              <a className="text-text underline decoration-[var(--accent)] underline-offset-4" href="https://akashsundar-portfolio.vercel.app" target="_blank" rel="noopener">
-                akashsundar-portfolio.vercel.app
-              </a>
-              , made yours: your photo in the spotlight, your own voice introducing you, your work laid out properly.
+              A cinematic portfolio website, made yours: your photo in the spotlight, your own voice introducing you, your work laid out
+              properly — built in minutes and downloaded as a site you own.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#samples" className="btn">See examples</a>
