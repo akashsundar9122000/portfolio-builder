@@ -14,7 +14,7 @@ const Body = z.object({
 });
 
 const REFUSED = {
-  "active-code": "You already have an active code — check your inbox (and spam folder) for mail from FolioForge. Each code builds one portfolio and lasts 7 days.",
+  "active-code": "You already have an active code — check your inbox (and spam folder) for mail from FolioForge. Codes last 7 days.",
   pending: "Your request is already with us — we’ll email your code once it’s approved, usually within 24 hours.",
   "rate-limited": "Too many requests today. Please try again tomorrow.",
 } as const;

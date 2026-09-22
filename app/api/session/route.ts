@@ -14,7 +14,7 @@ const Body = z.object({ email: z.string().max(200).optional().default(""), code:
 
 const WHY: Record<string, string> = {
   invalid: "That email and code don’t match. Check both — the code is in the email we sent you.",
-  used: "This code has already been used to download a portfolio. Request a new code to build another.",
+  used: "This code has already been used. Request a new code to keep building.",
   expired: "This code has expired (codes last 7 days). Request a new one below.",
   revoked: "This code was revoked and can’t be used again. Request a new code below.",
 };
@@ -42,7 +42,7 @@ export async function GET() {
   if (!s.code) return NextResponse.json({ active: false, ended: s.ended ?? null, features: features() });
   const access =
     s.code.kind === "issued"
-      ? { kind: "issued" as const, email: s.code.email, downloads: await downloadsFor(s.code.code).catch(() => []) }
+      ? { kind: "issued" as const, email: s.code.email, expiresAt: s.code.expiresAt, downloads: await downloadsFor(s.code.code).catch(() => []) }
       : { kind: "master" as const };
   return NextResponse.json({ active: true, access, features: features() });
 }

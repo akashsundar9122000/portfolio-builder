@@ -12,7 +12,7 @@ import { AlertCircle, ArrowRight, CheckCircle2, Info, Loader2, Mail } from "luci
 const SUPPORT = "support.folioforge@gmail.com";
 
 const ENDED: Record<string, string> = {
-  used: "Your code has been used — you downloaded both the ZIP and the single HTML file. Request a new code to build another portfolio.",
+  used: "Your code has been used. Request a new one below to keep building.",
   expired: "Your code has expired (codes last 7 days). Request a new one below — your draft is still in this browser if it’s under 7 days old.",
   revoked: "Your access code was revoked, so you’ve been signed out. A revoked code can’t be restored — request a new one below if you’d like to keep building.",
 };
@@ -174,7 +174,7 @@ function ConfirmRequest({ email, onOk, onCancel }: { email: string; onOk: () => 
       <p className="text-text-2 mt-3 text-[15px] leading-relaxed">
         Your request will be sent to <strong className="text-text">{SUPPORT}</strong>. Once approved, your access code will be emailed to <strong className="text-text break-all">{email}</strong>.
       </p>
-      <p className="text-text-3 mt-3 text-sm">One code builds one portfolio and is valid for 7 days.</p>
+      <p className="text-text-3 mt-3 text-sm">Your code is valid for 7 days from when it’s sent.</p>
       <div className="mt-6 flex justify-end gap-2">
         <button type="button" className="btn" onClick={onCancel}>Cancel</button>
         <button type="button" className="btn btn-primary" onClick={onOk} autoFocus>OK, send</button>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, CheckCircle2, Download, FileCode2, KeyRound, Loader2, Monitor, Smartphone, Tablet, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, Download, FileCode2, KeyRound, Loader2, Monitor, Smartphone, Tablet, Trash2, Undo2 } from "lucide-react";
 import { canUndo, undo, update, useDraft, wipeEverything } from "@/lib/builder/store";
 import { THEMES } from "@/lib/builder/themes";
 import { downloadSingle, downloadZip, renderPreview } from "@/lib/builder/export";
@@ -27,10 +27,6 @@ export function Studio() {
   const [tab, setTab] = useState<"assistant" | "edit">("assistant");
   const [busy, setBusy] = useState<"" | "zip" | "html">("");
   const [note, setNote] = useState("");
-  // formats downloaded with an emailed code; both = the code is used up
-  const [done, setDone] = useState<("html" | "zip")[] | null>(null);
-  const [finished, setFinished] = useState(false);
-  const downloaded = done ?? (access.kind === "issued" ? access.downloads : []);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [boxW, setBoxW] = useState(1000);
@@ -63,14 +59,11 @@ export function Studio() {
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) { router.replace("/?expired=1#access"); throw new Error("Your session has ended."); }
     if (!res.ok) throw new Error(data.error ?? "Couldn’t check your code.");
-    return data as { burned: boolean; downloads: ("html" | "zip")[] };
+    return data as { downloads: ("html" | "zip")[] };
   }
 
   async function download(kind: "zip" | "html") {
     const issued = access.kind === "issued";
-    const other = kind === "zip" ? "html" : "zip";
-    if (issued && downloaded.includes(other) && !downloaded.includes(kind)
-      && !confirm(`This is your second format. After this download your access code is used up and you’ll be signed out — make sure your portfolio is final.\n\nDownload the ${kind === "zip" ? "ZIP" : "single HTML file"} now?`)) return;
     setBusy(kind);
     setNote("");
     try {
@@ -80,11 +73,7 @@ export function Studio() {
         const size = await downloadSingle(d);
         if (size > 8 * 1024 * 1024) setNote(`That file is ${(size / 1048576).toFixed(1)} MB — the ZIP loads faster online.`);
       }
-      if (issued) {
-        const r = await track(kind, "done");
-        setDone(r.downloads);
-        if (r.burned) setFinished(true);
-      }
+      if (issued) await track(kind, "done");
     } catch (e) {
       setNote(e instanceof Error ? e.message : "Download failed.");
     } finally {
@@ -123,11 +112,11 @@ export function Studio() {
         <p className="text-text-2 border-hair flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 text-sm">
           <KeyRound className="text-accent size-4" aria-hidden />
           <span>Code for <strong className="text-text">{access.email}</strong></span>
-          <span className="font-mono text-xs">ZIP {downloaded.includes("zip") ? "✓" : "—"} · HTML {downloaded.includes("html") ? "✓" : "—"}</span>
-          <span className="text-text-3">Downloading both formats uses up your code. Re-downloading the same format is free.</span>
+          <span className="text-text-3">
+            Valid until {new Date(access.expiresAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} — build and download as often as you like until then.
+          </span>
         </p>
       )}
-      {finished && <Finished />}
 
       <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_24rem]">
         <div ref={boxRef} className="bg-sunken relative min-h-[60svh] overflow-hidden lg:min-h-0">
@@ -171,27 +160,5 @@ export function Studio() {
         </aside>
       </div>
     </div>
-  );
-}
-
-/** Shown once an emailed code is used up: both files are saved and the session has ended. */
-function Finished() {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dlg = ref.current;
-    if (dlg && !dlg.open) dlg.showModal();
-  }, []);
-  return (
-    <dialog ref={ref} aria-labelledby="finished-title" onCancel={(e) => e.preventDefault()} className="card text-text m-auto w-[min(30rem,calc(100%-2rem))] p-7 backdrop:bg-black/70">
-      <CheckCircle2 className="text-ok size-7" aria-hidden />
-      <h2 id="finished-title" className="mt-4 text-xl font-semibold">Your portfolio is ready</h2>
-      <p className="text-text-2 mt-3 text-[15px] leading-relaxed">
-        You’ve downloaded both the ZIP and the single HTML file, so your access code is now used and you’ve been signed out. Upload the ZIP to any static host (Vercel, Netlify, GitHub Pages) to put it online.
-      </p>
-      <p className="text-text-3 mt-3 text-sm">Want to build another? Request a new code on the home page.</p>
-      <div className="mt-6 flex justify-end">
-        <Link href="/#access" className="btn btn-primary">Back to home</Link>
-      </div>
-    </dialog>
   );
 }

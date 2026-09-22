@@ -4,10 +4,10 @@ import { CalendarClock, Download, KeyRound, MailCheck, RefreshCw, UserCheck } fr
 const RULES = [
   { icon: MailCheck, title: "Request, then check your inbox", body: "Ask for a code with your name and email. Requests go to support.folioforge@gmail.com and are approved by hand, usually within 24 hours. Check spam or promotions if it hasn’t arrived." },
   { icon: UserCheck, title: "Your code is yours alone", body: "Every code is unique and tied to the email it was sent to. Sign in with that same email and code — a code on its own, or with another email, won’t work." },
-  { icon: KeyRound, title: "One code, one portfolio", body: "A code builds a single portfolio. Edit, preview and use the AI helpers as much as you like while you build." },
-  { icon: Download, title: "Used up after both downloads", body: "When you’ve downloaded both the ZIP and the single HTML file, the code is used up and you’re signed out. Until then you can re-download the same format freely. The resume PDF doesn’t count." },
-  { icon: CalendarClock, title: "Valid for 7 days", body: "A code stops working 7 days after it’s issued, whether or not you’ve downloaded. Your draft lives only in your browser and is deleted after 7 days too." },
-  { icon: RefreshCw, title: "Need another? Ask again", body: "For a new portfolio — or once a code is used or expired — request a new code. You can hold one active code per email at a time." },
+  { icon: KeyRound, title: "Build as much as you like", body: "While your code is valid, edit, preview, use the AI helpers and start over as often as you want." },
+  { icon: Download, title: "Download any time", body: "Download the ZIP and the single HTML file as many times as you need — downloading never uses up your code." },
+  { icon: CalendarClock, title: "Valid for 7 days", body: "Your code works for 7 days from the moment it’s sent, then stops. Your draft lives only in your browser and is deleted after 7 days too." },
+  { icon: RefreshCw, title: "Need another? Ask again", body: "Once your code has expired, request a new one to keep building. You can hold one active code per email at a time." },
 ];
 
 export function CodeRules() {

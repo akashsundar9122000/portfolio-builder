@@ -67,9 +67,8 @@ const rows = (pairs: [string, string][]) =>
 const RULES = [
   "The code works only with this email address.",
   "It is valid for 7 days from now.",
-  "It builds one portfolio: once you have downloaded both the ZIP and the single HTML file, the code is used up.",
-  "You can re-download the same format as often as you like until both are done.",
-  "To build another portfolio later, request a new code on the website.",
+  "Build, preview and download (ZIP or single HTML) as often as you like while it’s valid.",
+  "After 7 days it stops working — request a new code on the website to keep building.",
 ];
 
 // ── messages ────────────────────────────────────────────────────────────

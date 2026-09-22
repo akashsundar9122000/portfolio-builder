@@ -13,7 +13,7 @@ import { checkLogin, getCode, codeStatus, normalCode, type CodeStatus } from "./
  * - master codes (CREATE_INVITE_CODES) are permanent and need no email;
  * - issued codes (emailed, see ./codes) must be signed in with their email
  *   and are re-checked in Redis on every request, so a code that's been
- *   used up, revoked or has expired ends the session immediately.
+ *   revoked or has expired ends the session immediately.
  */
 
 const COOKIE = "pb_session";
@@ -32,10 +32,10 @@ export async function resolveLogin(email: string, input: string): Promise<Login>
   if (!email.trim()) return { ok: false, reason: "invalid" };
   const r = await checkLogin(email, input);
   if (!r.ok) return r;
-  return { ok: true, code: issued(r.code.code, r.code.email), expiresAt: r.code.expiresAt };
+  return { ok: true, code: issued(r.code.code, r.code.email, r.code.expiresAt), expiresAt: r.code.expiresAt };
 }
 
-const issued = (code: string, email: string): InviteCode => ({ code, email, kind: "issued", portraits: env.ISSUED_PORTRAIT_LIMIT });
+const issued = (code: string, email: string, expiresAt: number): InviteCode => ({ code, email, expiresAt, kind: "issued", portraits: env.ISSUED_PORTRAIT_LIMIT });
 
 /**
  * `secure` must follow the actual protocol: browsers silently drop a
@@ -74,7 +74,7 @@ export async function sessionState(): Promise<SessionState> {
   const c = await getCode(normalCode(code)).catch(() => undefined);
   if (!c) return {};
   const state = codeStatus(c);
-  return state === "active" ? { code: issued(c.code, c.email) } : { ended: state };
+  return state === "active" ? { code: issued(c.code, c.email, c.expiresAt) } : { ended: state };
 }
 
 export async function currentCode(): Promise<InviteCode | undefined> {

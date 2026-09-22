@@ -116,30 +116,22 @@ describe("admin revoke", () => {
     expect((await createRequest({ name: "Ada", email: "ada@example.com", reason: "", ip: "7" })).ok).toBe(true);
   });
 
-  it("refuses codes that are already used", async () => {
+  it("refuses codes that have expired", async () => {
     const { code } = await requestAndIssue();
-    await recordDownload(code.code, "zip");
-    await recordDownload(code.code, "html");
-    await expect(adminRevoke(code.code, "")).rejects.toThrow(/already used/);
+    vi.useFakeTimers({ now: code.expiresAt + 1 });
+    await expect(adminRevoke(code.code, "")).rejects.toThrow(/already expired/);
+    vi.useRealTimers();
   });
 });
 
-describe("single portfolio", () => {
-  it("is used up only after both formats are downloaded", async () => {
+describe("downloads", () => {
+  it("never end a code — it stays valid for its full 7 days", async () => {
     const { code } = await requestAndIssue();
-    expect((await recordDownload(code.code, "zip")).burned).toBe(false);
-    expect((await recordDownload(code.code, "zip")).burned).toBe(false); // same format again is free
+    for (const k of ["zip", "html", "zip", "html"] as const) await recordDownload(code.code, k);
+    expect((await recordDownload(code.code, "zip")).downloads).toEqual(["html", "zip"]);
     expect((await checkLogin("ada@example.com", code.code)).ok).toBe(true);
-    expect((await recordDownload(code.code, "html")).burned).toBe(true);
-    expect(await checkLogin("ada@example.com", code.code)).toEqual({ ok: false, reason: "used" });
-  });
-
-  it("frees the email for a new request once the code is used", async () => {
-    const { code } = await requestAndIssue();
+    // and the email still counts as holding an active code
     expect(await createRequest({ name: "Ada", email: "ada@example.com", reason: "", ip: "9" })).toEqual({ ok: false, reason: "active-code" });
-    await recordDownload(code.code, "zip");
-    await recordDownload(code.code, "html");
-    expect((await createRequest({ name: "Ada", email: "ada@example.com", reason: "", ip: "9" })).ok).toBe(true);
   });
 });
 

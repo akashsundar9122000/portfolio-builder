@@ -44,9 +44,10 @@ export const hasText = Boolean(env.NVIDIA_API_KEY || (env.POLLINATIONS_API_KEY &
 export interface InviteCode {
   code: string;
   portraits: number;
-  /** "master" = permanent code from CREATE_INVITE_CODES; "issued" = emailed, single-portfolio code */
+  /** "master" = permanent code from CREATE_INVITE_CODES; "issued" = emailed code, valid 7 days */
   kind: "master" | "issued";
   email?: string;
+  expiresAt?: number;
 }
 
 export function inviteCodes(): InviteCode[] {

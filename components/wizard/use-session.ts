@@ -7,8 +7,8 @@ import { setBuilderFeatures } from "./features";
 
 export interface Features { text: boolean; image: boolean; generate: boolean }
 
-/** How the person signed in: a permanent master code, or an emailed single-portfolio code. */
-export type Access = { kind: "master" } | { kind: "issued"; email: string; downloads: ("html" | "zip")[] };
+/** How the person signed in: a permanent master code, or an emailed code valid for 7 days. */
+export type Access = { kind: "master" } | { kind: "issued"; email: string; expiresAt: number; downloads: ("html" | "zip")[] };
 
 interface State { ready: boolean; features: Features; access: Access }
 

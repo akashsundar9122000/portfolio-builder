@@ -3,14 +3,15 @@ import { randomBytes, randomInt } from "node:crypto";
 import { hasRedis, redis } from "./limits";
 
 /**
- * Emailed, single-portfolio access codes.
+ * Emailed access codes.
  *
  * Someone asks for a code on the landing page → a request is stored and
  * Akash is emailed → from the admin page he previews a code (as many times
  * as he likes) and sends it → the code is bound to that email address.
  *
- * A code stops working when the person has downloaded BOTH the ZIP and the
- * single HTML file, when it's 7 days old, or when it's revoked. Every code
+ * A code works for 7 days from the moment it's sent — build, preview and
+ * download as often as you like — unless an admin revokes it first.
+ * (Codes marked "used" by the old download rule stay that way.) Every code
  * ever issued is kept in a set, so no code is ever handed out twice.
  *
  * Keys (Upstash Redis):
@@ -285,20 +286,13 @@ export async function checkLogin(email: string, input: string): Promise<LoginOut
   return state === "active" ? { ok: true, code: c } : { ok: false, reason: state };
 }
 
-/** Records a finished download; the code is used up once both formats are done. */
-export async function recordDownload(code: string, kind: DownloadKind): Promise<{ burned: boolean; downloads: DownloadKind[] }> {
+/** Records a finished download, for the admin dashboard. Downloads never end a code. */
+export async function recordDownload(code: string, kind: DownloadKind): Promise<{ downloads: DownloadKind[] }> {
   store();
   const key = `ff:dl:${code}`;
   await redis(["SADD", key, kind]);
   await redis(["EXPIRE", key, KEEP_S]);
-  const downloads = ((await redis(["SMEMBERS", key])) as DownloadKind[]).sort();
-  if (downloads.length < 2) return { burned: false, downloads };
-  const c = await getCode(code);
-  if (c && c.status === "active") {
-    await putJson(`ff:code:${code}`, { ...c, status: "used", usedAt: Date.now() } satisfies IssuedCode);
-    await clearEmailIndex(c);
-  }
-  return { burned: true, downloads };
+  return { downloads: ((await redis(["SMEMBERS", key])) as DownloadKind[]).sort() };
 }
 
 export async function downloadsFor(code: string): Promise<DownloadKind[]> {
