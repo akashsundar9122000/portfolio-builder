@@ -1,4 +1,6 @@
-# Portfolio Builder
+# FolioForge
+
+*Forge the portfolio your career deserves.*
 
 A friend fills in a guided form — photo, outfit, voice intro, theme, work,
 skills — previews a cinematic portfolio in the style of

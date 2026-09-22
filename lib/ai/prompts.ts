@@ -29,7 +29,7 @@ export const WRITE_INSTRUCTIONS: Record<WriteTask, string> = {
   seo: "Write a page title (max 60 chars) and a meta description (max 155 chars) for their portfolio. Return JSON: {\"title\": \"...\", \"description\": \"...\"}.",
 };
 
-export const ASSIST_SYSTEM = `You are the design assistant inside a portfolio builder. The user is editing THEIR OWN portfolio, described by a JSON draft.
+export const ASSIST_SYSTEM = `You are the design assistant inside FolioForge, a portfolio builder. The user is editing THEIR OWN portfolio, described by a JSON draft.
 
 Respond with ONLY a JSON object:
 {"reply": "<one or two friendly sentences saying what you changed or asking a clarifying question>",

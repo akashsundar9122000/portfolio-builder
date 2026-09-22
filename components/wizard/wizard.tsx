@@ -68,7 +68,7 @@ export function Wizard() {
     <div className="spot-bg min-h-svh">
       <header className="border-hair sticky top-0 z-20 border-b bg-[color-mix(in_srgb,var(--bg)_85%,transparent)] backdrop-blur">
         <div className="mx-auto flex w-[min(1240px,100%-2rem)] items-center justify-between gap-3 py-2">
-          <Link href="/" className="label text-text tap flex min-h-11 items-center">Portfolio Builder</Link>
+          <Link href="/" className="label text-text tap flex min-h-11 items-center">FolioForge</Link>
           <Link href="/studio" className="btn btn-primary"><Eye className="size-4" aria-hidden /> Preview</Link>
         </div>
         <div className="h-0.5 bg-[var(--hair)] lg:hidden" aria-hidden>

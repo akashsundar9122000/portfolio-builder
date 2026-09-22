@@ -3,8 +3,10 @@ import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Portfolio Builder — by Akash Sundar", template: "%s — Portfolio Builder" },
-  description: "Build a cinematic personal portfolio in minutes: your photo, your voice, your work. Download it as a website.",
+  title: { default: "FolioForge — forge the portfolio your career deserves", template: "%s — FolioForge" },
+  applicationName: "FolioForge",
+  description: "FolioForge builds a cinematic personal portfolio in minutes: your photo, your voice, your work, your career. Download it as a website.",
+  openGraph: { siteName: "FolioForge", title: "FolioForge — forge the portfolio your career deserves" },
   robots: { index: true, follow: true },
 };
 

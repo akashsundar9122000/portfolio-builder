@@ -21,6 +21,8 @@ import { applyOps, setAt, type Op } from "./patch";
  * provider, no re-render outside the components that read the draft.
  */
 
+// The store name predates the FolioForge name; renaming it would orphan
+// every draft already saved in visitors' browsers.
 const db = typeof indexedDB !== "undefined" ? createStore("portfolio-builder", "kv") : undefined;
 const DRAFT_KEY = "draft:v1";
 const BACKUP_KEY = "pb:draft-backup";

@@ -42,7 +42,7 @@ export async function generateResumePdf(d: Draft): Promise<ResumeResult> {
   const doc = await PDFDocument.create();
   doc.setTitle(`${d.identity.name} - Resume`);
   doc.setAuthor(d.identity.name);
-  doc.setCreator("Portfolio Builder");
+  doc.setCreator("FolioForge");
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const ink = rgb(0.11, 0.11, 0.12);

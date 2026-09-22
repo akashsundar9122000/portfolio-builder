@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <main className="spot-bg min-h-svh">
       <div className="mx-auto w-[min(1180px,100%-2.5rem)] py-[clamp(3rem,9vh,7rem)]">
-        <p className="label text-accent">Portfolio Builder · by Akash Sundar</p>
+        <p className="label text-accent">FolioForge · by Akash Sundar</p>
         <h1 className="display mt-6 text-[clamp(2.75rem,8vw,6.5rem)]">
           <span className="block">A portfolio</span>
           <span className="grad block">that sounds</span>

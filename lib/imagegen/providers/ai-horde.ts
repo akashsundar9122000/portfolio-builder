@@ -22,7 +22,7 @@ import type { GenerationResult, ImageGenerationProvider, ImageGenerationRequest,
  */
 
 const BASE = "https://aihorde.net/api";
-const CLIENT_AGENT = "portfolio-builder:1.0:akash-portfolio-builder.vercel.app";
+const CLIENT_AGENT = "folioforge:1.0:folioforge-app.vercel.app";
 const MODELS_TTL_MS = 10 * 60_000;
 
 export interface AIHordeOptions {
