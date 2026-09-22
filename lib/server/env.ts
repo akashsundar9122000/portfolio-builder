@@ -29,6 +29,10 @@ const Schema = z.object({
   ADMIN_PASSWORD: z.string().min(8).optional(),
   APP_URL: z.string().url().optional(),
   ISSUED_PORTRAIT_LIMIT: z.coerce.number().int().min(0).default(6),
+  // published portfolios live in Cloudflare Workers KV (lib/server/kv.ts)
+  CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+  CF_KV_NAMESPACE_ID: z.string().regex(/^[0-9a-f]{32}$/, "CF_KV_NAMESPACE_ID must be the namespace's 32-character ID, not its name").optional(),
+  CF_KV_API_TOKEN: z.string().optional(),
 });
 
 const blankToUndefined = Object.fromEntries(

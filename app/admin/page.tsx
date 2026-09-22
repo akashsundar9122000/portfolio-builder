@@ -4,6 +4,7 @@ import { isAdmin, requestSig } from "@/lib/server/admin";
 import { listRequests, StoreMissing, type RequestRow } from "@/lib/server/codes";
 import { StatusChip, rowState, when, type RowState } from "@/components/admin/status";
 import { AdminSignOut, RevokeButton } from "@/components/admin/admin-actions";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 // reads the admin cookie on every request
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
         </div>
         <AdminSignOut />
       </div>
+      <AdminNav current="codes" />
 
       {problem && <p role="alert" className="border-danger/40 bg-danger/10 text-danger mt-6 rounded-xl border px-4 py-3 text-sm">{problem}</p>}
 

@@ -21,7 +21,7 @@ const EXT: Record<string, string> = {
   "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/webm": "webm", "application/pdf": "pdf",
 };
 
-function portraitRef(d: Draft): { ref: string; kind: "cutout" | "framed" } | null {
+export function portraitRef(d: Draft): { ref: string; kind: "cutout" | "framed" } | null {
   if (d.portrait.cutout) return { ref: d.portrait.cutout, kind: "cutout" };
   if (d.portrait.chosen) return { ref: d.portrait.chosen, kind: "framed" };
   if (d.portrait.photo) return { ref: d.portrait.photo, kind: "framed" };

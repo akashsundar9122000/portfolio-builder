@@ -53,3 +53,9 @@ export const safeNext = (next: string | null | undefined) => (next && /^\/admin(
 export function isHttps(req: Request) {
   return new URL(req.url).protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
 }
+
+/** The private "manage" link emailed to a site's owner: unpublish without a code. */
+export const siteSig = (id: string) => sign(`site:${id}`);
+export const siteSigOk = (id: string, sig: string | undefined) => Boolean(sig) && same(sig!, siteSig(id));
+export const manageLink = (id: string, req?: Request) => `${baseUrl(req)}/manage/${id}?sig=${siteSig(id)}`;
+export const siteUrl = (slug: string, req?: Request) => `${baseUrl(req)}/p/${slug}`;

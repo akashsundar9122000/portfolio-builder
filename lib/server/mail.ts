@@ -3,6 +3,7 @@ import { createTransport, type Transporter } from "nodemailer";
 import { env } from "./env";
 import { h } from "@/lib/render/html";
 import type { AccessRequest, IssuedCode } from "./codes";
+import type { Site } from "./sites";
 
 /**
  * Transactional email over SMTP: any provider via SMTP_HOST/SMTP_USER/
@@ -139,4 +140,47 @@ export async function mailRevoked(r: AccessRequest, c: IssuedCode, site: string)
   ].join(""));
   const text = `Hi ${r.name},\n\nYour access code ${c.code} has been revoked and no longer works. If you were in the middle of building, you've been signed out.${c.revokeReason ? `\n\nReason: ${c.revokeReason}` : ""}\n\nA revoked code can't be restored. If you'd still like to build your portfolio, request a new code: ${site}\n\nQuestions? Just reply to this email.`;
   await send(r.email, "Your FolioForge access code was revoked", html, text);
+}
+
+// ── published sites ─────────────────────────────────────────────────────
+
+export async function mailPublished(to: string, site: Site, url: string, manage: string, renamed: boolean) {
+  const title = renamed ? "Your portfolio has a new address" : "Your portfolio is live";
+  const html = layout(title, [
+    p(`Hi ${h(site.name)},`),
+    p(renamed ? "Your portfolio now lives at the address below. Links to your old address keep working — they forward here." : "Your portfolio is published and anyone with the link can see it:"),
+    `<p style="margin:18px 0;padding:16px;border-radius:12px;background:#faf6ef;border:1px dashed ${ACCENT};text-align:center;font:600 16px/1.4 ui-monospace,Menlo,monospace;word-break:break-all"><a href="${h(url)}" style="color:${INK}">${h(url)}</a></p>`,
+    button(url, "Open my portfolio"),
+    p("It stays online until you take it down. You can update it or change its address while your access code is valid; after that it stays as it is."),
+    `<p style="margin:0 0 6px;font-weight:600">Take it down any time</p>`,
+    p(`Keep this email: <a href="${h(manage)}">this private link</a> lets you unpublish your portfolio whenever you like, even after your code has expired. Don’t share it.`),
+  ].join(""));
+  const text = `Hi ${site.name},\n\n${renamed ? "Your portfolio has a new address (old links forward here):" : "Your portfolio is live:"}\n${url}\n\nIt stays online until you take it down. You can update it or change its address while your access code is valid.\n\nTake it down any time with this private link (keep it, don't share it):\n${manage}`;
+  await send(to, `${title}: ${url}`, html, text);
+}
+
+export async function mailSiteRemoved(to: string, site: Site, site_url: string) {
+  const html = layout("Your portfolio was taken down", [
+    p(`Hi ${h(site.name)},`),
+    p(`Your published portfolio at <strong>${h(site_url)}</strong> has been taken down by FolioForge and is no longer online.`),
+    site.unpublishReason ? `<p style="margin:0 0 14px;padding:12px 14px;border-left:3px solid ${ACCENT};background:#faf8f4"><strong>Reason:</strong><br>${h(site.unpublishReason).replace(/\n/g, "<br>")}</p>` : "",
+    p("If you think this is a mistake, just reply to this email."),
+  ].join(""));
+  const text = `Hi ${site.name},\n\nYour published portfolio at ${site_url} has been taken down by FolioForge and is no longer online.${site.unpublishReason ? `\n\nReason: ${site.unpublishReason}` : ""}\n\nIf you think this is a mistake, just reply to this email.`;
+  await send(to, "Your FolioForge portfolio was taken down", html, text);
+}
+
+export async function mailReport(input: { slug: string; url: string; reason: string; details: string; from: string; ip: string; adminUrl: string }) {
+  const html = layout("A published portfolio was reported", [
+    rows([
+      ["Site", `<a href="${h(input.url)}">${h(input.url)}</a>`],
+      ["Reason", h(input.reason)],
+      ["Details", input.details ? h(input.details).replace(/\n/g, "<br>") : `<span style="color:${MUTED}">—</span>`],
+      ["Reporter", input.from ? h(input.from) : `<span style="color:${MUTED}">anonymous</span>`],
+      ["IP", h(input.ip)],
+    ]),
+    button(input.adminUrl, "Review in admin"),
+  ].join(""));
+  const text = `A published portfolio was reported.\n\nSite: ${input.url}\nReason: ${input.reason}\nDetails: ${input.details || "—"}\nReporter: ${input.from || "anonymous"}\nIP: ${input.ip}\n\nReview: ${input.adminUrl}`;
+  await send(env.ADMIN_EMAIL, `Report: ${input.slug} — ${input.reason}`, html, text, input.from || undefined);
 }

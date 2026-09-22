@@ -12,7 +12,7 @@ const STEPS = [
   { icon: Camera, title: "Your photo", body: "Upload a portrait. It’s cut out and staged under a spotlight — dressed in a professional look where AI outfits are enabled." },
   { icon: Mic, title: "Your voice", body: "Read a short intro in your own voice. Noise is removed in your browser and captions are timed automatically." },
   { icon: Palette, title: "Your theme", body: "Pick one of ten designed themes, then fill in your work, skills and story — with AI help for every paragraph." },
-  { icon: Download, title: "Your website", body: "Preview it live, ask the assistant for changes, and download the finished site as a ZIP or a single HTML file." },
+  { icon: Download, title: "Your website", body: "Preview it live, ask the assistant for changes, then publish it to your own link — or download it as a ZIP or a single HTML file." },
 ];
 
 // only what the cards show — the sample drafts themselves render on the server
@@ -104,7 +104,7 @@ export default function Home() {
           <p className="text-text-2 text-[15px] leading-relaxed">
             <strong className="text-text">Your data stays with you.</strong> Your draft, photo and voice are saved only in the browser
             you build in — never on our servers — so they don’t follow you to another device or browser. They’re deleted automatically when your access
-            code expires. A photo is only sent out when you ask for an AI outfit, and it isn’t stored. Your voice is never cloned. We keep only your name,
+            code expires. Only if you choose to publish is your finished site stored with us, so it can stay online until you unpublish it. A photo is only sent out when you ask for an AI outfit, and it isn’t stored. Your voice is never cloned. We keep only your name,
             email and code, to send and check it.
           </p>
         </div>

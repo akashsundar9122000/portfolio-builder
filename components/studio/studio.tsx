@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Download, FileCode2, KeyRound, Loader2, Monitor, Smartphone, Tablet, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, Download, Globe, FileCode2, KeyRound, Loader2, Monitor, Smartphone, Tablet, Trash2, Undo2 } from "lucide-react";
 import { canUndo, undo, update, useDraft, wipeEverything } from "@/lib/builder/store";
 import { THEMES } from "@/lib/builder/themes";
 import { downloadSingle, downloadZip, renderPreview } from "@/lib/builder/export";
 import { useBuilderSession } from "@/components/wizard/use-session";
 import { STEPS } from "@/components/wizard/wizard";
 import { Assistant } from "./assistant";
+import { PublishPanel } from "./publish-panel";
 import { UiThemeToggle } from "@/components/ui-theme";
 
 const DEVICES = [
@@ -27,6 +28,7 @@ export function Studio() {
   const [tab, setTab] = useState<"assistant" | "edit">("assistant");
   const [busy, setBusy] = useState<"" | "zip" | "html">("");
   const [note, setNote] = useState("");
+  const [publishing, setPublishing] = useState(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [boxW, setBoxW] = useState(1000);
@@ -99,7 +101,10 @@ export function Studio() {
         <button type="button" className="btn size-11 px-0" onClick={undo} disabled={!canUndo()} aria-label="Undo last assistant change"><Undo2 className="size-4" aria-hidden /></button>
         <div className="ml-auto flex flex-wrap gap-2">
           <UiThemeToggle />
-          <button type="button" className="btn btn-primary" onClick={() => download("zip")} disabled={Boolean(busy)}>
+          <button type="button" className="btn btn-primary" onClick={() => setPublishing(true)}>
+            <Globe className="size-4" aria-hidden /> Publish
+          </button>
+          <button type="button" className="btn" onClick={() => download("zip")} disabled={Boolean(busy)}>
             {busy === "zip" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />} Download ZIP
           </button>
           <button type="button" className="btn" onClick={() => download("html")} disabled={Boolean(busy)}>
@@ -108,6 +113,7 @@ export function Studio() {
         </div>
       </header>
       {note && <p role="status" className="text-text-2 border-hair border-b px-4 py-2 text-sm">{note}</p>}
+      {publishing && <PublishPanel draft={d} expiresAt={access.kind === "issued" ? access.expiresAt : undefined} onClose={() => setPublishing(false)} />}
       {access.kind === "issued" && (
         <p className="text-text-2 border-hair flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 text-sm">
           <KeyRound className="text-accent size-4" aria-hidden />
