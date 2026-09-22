@@ -9,6 +9,7 @@ import { uid } from "@/lib/builder/defaults";
 import { SOCIAL_KINDS, type AwardItem, type EducationItem, type ExperienceItem, type ProjectItem, type SkillGroupItem } from "@/lib/builder/schema";
 import { aiWrite, summarize } from "@/lib/builder/ai-client";
 import { dataUrlToBlob, downscale } from "@/lib/media/image";
+import { generateResumePdf, missingForResume } from "@/lib/builder/resume-pdf";
 import { runGeneration, statusLabel, type UiStatus } from "@/lib/imagegen/client";
 import { useBuilderFeatures } from "./features";
 
@@ -339,15 +340,68 @@ export function StepAwards() {
 export function StepResume() {
   const d = useDraft();
   const [err, setErr] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  // the object URL is remembered with the file it belongs to, so a stale one is never shown
+  const [link, setLink] = useState<{ ref: string; url: string }>();
+  const url = link && link.ref === d.resume.file ? link.url : undefined;
+  const missing = missingForResume(d);
+
+  useEffect(() => {
+    let live = true;
+    const ref = d.resume.file;
+    if (ref) void blobUrl(ref).then((u) => live && u && setLink({ ref, url: u }));
+    return () => { live = false; };
+  }, [d.resume.file]);
+
+  async function generate() {
+    setErr("");
+    setNote("");
+    setBusy(true);
+    try {
+      const r = await generateResumePdf(d);
+      const ref = await putBlob(r.pdf);
+      update("resume.file", ref);
+      setNote(
+        `Generated a ${r.pages}-page resume from your details.` +
+          (r.droppedCharacters ? " Some characters (e.g. non-Latin script or emoji) couldn’t be included in the PDF font and were left out." : "") +
+          " If you change your details later, generate it again.",
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn’t generate the PDF.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <Field label="Resume PDF (optional)" hint="Adds a “Download resume” section. PDF only, up to 5 MB.">
+      <div className="card flex flex-col gap-4 p-5 sm:p-6">
+        <div>
+          <p className="font-medium">Generate from my details</p>
+          <p className="text-text-3 mt-1 text-sm leading-relaxed">
+            A clean, one-column resume built from everything you’ve entered — experience, projects, skills, education and awards. Real, selectable text that
+            applicant-tracking systems can read.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="btn btn-primary" disabled={busy || missing.length > 0} onClick={generate}>
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
+            {d.resume.file ? "Regenerate from my details" : "Generate from my details"}
+          </button>
+          {missing.length > 0 && <span className="text-text-3 text-sm">Add {missing.join(" and ")} first.</span>}
+        </div>
+        {note && <p role="status" className="text-text-2 text-sm">{note}</p>}
+      </div>
+
+      <Field label="Or upload your own PDF" hint="Adds a “Download resume” section. PDF only, up to 5 MB.">
         <div className="flex flex-wrap items-center gap-3">
           <label className="btn cursor-pointer">
-            <FileText className="size-4" aria-hidden /> {d.resume.file ? "Replace PDF" : "Upload PDF"}
+            <FileText className="size-4" aria-hidden /> {d.resume.file ? "Replace with my PDF" : "Upload PDF"}
             <input type="file" accept="application/pdf" className="sr-only" onChange={async (e) => {
               const f = e.target.files?.[0];
               setErr("");
+              setNote("");
               if (!f) return;
               if (f.type !== "application/pdf") return setErr("Please choose a PDF.");
               if (f.size > 5 * 1024 * 1024) return setErr("That PDF is over 5 MB.");
@@ -355,10 +409,20 @@ export function StepResume() {
               update("resume.file", ref);
             }} />
           </label>
-          {d.resume.file && <><span className="text-ok text-sm">PDF attached</span><button type="button" className="btn" onClick={() => update("resume.file", null)}>Remove</button></>}
           {err && <span role="alert" className="text-danger text-sm">{err}</span>}
         </div>
       </Field>
+
+      {d.resume.file && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <span className="text-ok flex items-center gap-2 text-sm"><FileText className="size-4" aria-hidden /> Resume attached</span>
+          <div className="flex gap-2">
+            {url && <a className="btn" href={url} target="_blank" rel="noopener">View PDF</a>}
+            <button type="button" className="btn" onClick={() => { update("resume.file", null); setNote(""); }}>Remove</button>
+          </div>
+        </div>
+      )}
+
       <TextInput path="resume.label" label="Button text" max={40} />
     </div>
   );
