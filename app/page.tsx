@@ -5,6 +5,7 @@ import { CodeRules } from "@/components/landing/code-rules";
 import { Samples } from "@/components/landing/samples";
 import { SAMPLES } from "@/lib/builder/samples";
 import { UiThemeToggle } from "@/components/ui-theme";
+import { HeroShowcase } from "@/components/landing/hero-showcase";
 
 const STEPS = [
   { icon: Camera, title: "Your photo", body: "Upload a portrait. It’s cut out and staged under a spotlight — dressed in a professional look where AI outfits are enabled." },
@@ -34,21 +35,26 @@ export default function Home() {
           <p className="label text-accent">FolioForge · by Akash Sundar</p>
           <UiThemeToggle />
         </div>
-        <h1 className="display mt-6 text-[clamp(2.75rem,8vw,6.5rem)]">
-          <span className="block">A portfolio</span>
-          <span className="grad block">that sounds</span>
-          <span className="grad block">like you</span>
-        </h1>
-        <p className="text-text-2 mt-7 max-w-[48ch] text-lg leading-relaxed">
-          The cinematic portfolio from{" "}
-          <a className="text-text underline decoration-[var(--accent)] underline-offset-4" href="https://akashsundar-portfolio.vercel.app" target="_blank" rel="noopener">
-            akashsundar-portfolio.vercel.app
-          </a>
-          , made yours: your photo in the spotlight, your own voice introducing you, your work laid out properly.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a href="#samples" className="btn">See examples</a>
-          <a href="#access" className="btn btn-primary">Create yours</a>
+        <div className="mt-6 grid items-center gap-x-12 gap-y-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+          <div>
+            <h1 className="display text-[clamp(2.75rem,8vw,6.5rem)] lg:text-[clamp(3rem,5.4vw,5.25rem)]">
+              <span className="block">A portfolio</span>
+              <span className="grad block">that sounds</span>
+              <span className="grad block">like you</span>
+            </h1>
+            <p className="text-text-2 mt-7 max-w-[48ch] text-lg leading-relaxed">
+              The cinematic portfolio from{" "}
+              <a className="text-text underline decoration-[var(--accent)] underline-offset-4" href="https://akashsundar-portfolio.vercel.app" target="_blank" rel="noopener">
+                akashsundar-portfolio.vercel.app
+              </a>
+              , made yours: your photo in the spotlight, your own voice introducing you, your work laid out properly.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="#samples" className="btn">See examples</a>
+              <a href="#access" className="btn btn-primary">Create yours</a>
+            </div>
+          </div>
+          <HeroShowcase />
         </div>
 
         <section id="samples" aria-labelledby="samples-title" className="mt-[clamp(4rem,10vh,7rem)] scroll-mt-8">
