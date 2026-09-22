@@ -114,6 +114,8 @@ export const Draft = z.object({
     id: s(40),
     createdAt: z.number(),
     expiresAt: z.number(),
+    // who this browser's draft belongs to: the signed-in email ("master" for master codes)
+    owner: s(160).optional(),
     themeId: s(40),
     sections: z
       .array(z.object({ id: z.enum(SECTION_IDS), visible: z.boolean() }))

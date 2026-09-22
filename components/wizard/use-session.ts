@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadDraft } from "@/lib/builder/store";
+import { claimDraft, loadDraft } from "@/lib/builder/store";
 import { setBuilderFeatures } from "./features";
 
 export interface Features { text: boolean; image: boolean; generate: boolean }
@@ -22,8 +22,11 @@ export function useBuilderSession(): State {
       const [res] = await Promise.all([fetch("/api/session").then((r) => r.json()).catch(() => ({ active: false })), loadDraft()]);
       if (!live) return;
       if (!res.active) { router.replace(`/?expired=${res.ended ?? "1"}#access`); return; }
+      const access: Access = res.access ?? { kind: "master" };
+      await claimDraft(access.kind === "issued" ? access.email : "master", access.kind === "issued" ? access.expiresAt : undefined);
+      if (!live) return;
       setBuilderFeatures(res.features);
-      setState({ ready: true, features: res.features, access: res.access ?? { kind: "master" } });
+      setState({ ready: true, features: res.features, access });
     })();
     return () => { live = false; };
   }, [router]);

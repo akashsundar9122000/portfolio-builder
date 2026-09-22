@@ -10,11 +10,30 @@ import { AlertCircle, ArrowRight, CheckCircle2, Info, Loader2, Mail } from "luci
  */
 
 const SUPPORT = "support.folioforge@gmail.com";
+// mirrors OWNER_KEY in lib/builder/store (not imported: it would pull the draft store into this page)
+const OWNER_KEY = "pb:draft-owner";
+
+/** The email that owns the unexpired draft in this browser, if it's not `email`. */
+function otherDraftOwner(email: string): string | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OWNER_KEY) ?? "null") as { owner?: string; expiresAt?: number } | null;
+    if (!saved?.owner || !saved.expiresAt || saved.expiresAt < Date.now()) return null;
+    return saved.owner === email.trim().toLowerCase() ? null : saved.owner;
+  } catch {
+    return null;
+  }
+}
+
+const mask = (owner: string) => {
+  if (owner === "master") return "a test code";
+  const [user, domain] = owner.split("@");
+  return `${user.slice(0, 1)}•••@${domain ?? ""}`;
+};
 
 const ENDED: Record<string, string> = {
   used: "Your code has been used. Request a new one below to keep building.",
-  expired: "Your code has expired (codes last 7 days). Request a new one below — your draft is still in this browser if it’s under 7 days old.",
-  revoked: "Your access code was revoked, so you’ve been signed out. A revoked code can’t be restored — request a new one below if you’d like to keep building.",
+  expired: "Your code has expired (codes last 7 days), and the draft saved in this browser was cleared with it. Request a new code below to start again.",
+  revoked: "Your access code was revoked, so you’ve been signed out. A revoked code can’t be restored — request a new one below; with the same email on this browser, your draft will still be here.",
 };
 
 type Tab = "signin" | "request";
@@ -65,9 +84,18 @@ function SignIn({ onRequest }: { onRequest: () => void }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [replacing, setReplacing] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
+  function submit(e: React.FormEvent) {
     e.preventDefault();
+    // someone else's draft lives in this browser: say it will be deleted before signing in
+    const other = email.trim() ? otherDraftOwner(email) : null;
+    if (other) { setReplacing(other); return; }
+    void signIn();
+  }
+
+  async function signIn() {
+    setReplacing(null);
     setBusy(true);
     setError("");
     const { ok, data } = await postJson("/api/session", { email, code });
@@ -91,6 +119,19 @@ function SignIn({ onRequest }: { onRequest: () => void }) {
         No code yet?{" "}
         <button type="button" className="text-accent underline underline-offset-4" onClick={onRequest}>Get one — it’s free</button>
       </p>
+      {replacing && (
+        <Confirm
+          title="Replace the draft on this browser?"
+          ok="Delete it and sign in"
+          danger
+          onOk={() => void signIn()}
+          onCancel={() => setReplacing(null)}
+        >
+          This browser already has a portfolio draft started with <strong className="text-text">{mask(replacing)}</strong>. Drafts are saved only in the
+          browser — one per browser — so signing in as <strong className="text-text break-all">{email.trim()}</strong> deletes it and starts a fresh one.
+          This can’t be undone.
+        </Confirm>
+      )}
     </form>
   );
 }
@@ -153,7 +194,8 @@ function RequestCode({ onHaveCode }: { onHaveCode: () => void }) {
           {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Mail className="size-4" aria-hidden />} Get code
         </button>
         <p className="text-text-3 text-sm leading-relaxed">
-          Your request will be sent to <strong className="text-text-2">{SUPPORT}</strong>. We use your email only to send your code.
+          Your request will be sent to <strong className="text-text-2">{SUPPORT}</strong>. We use your email only to send your code. Your draft is saved
+          only in the browser you build in — never on our servers — so it won’t follow you to another device or browser.
         </p>
       </form>
       {confirming && <ConfirmRequest email={email.trim()} onOk={send} onCancel={() => setConfirming(false)} />}
@@ -162,6 +204,19 @@ function RequestCode({ onHaveCode }: { onHaveCode: () => void }) {
 }
 
 function ConfirmRequest({ email, onOk, onCancel }: { email: string; onOk: () => void; onCancel: () => void }) {
+  return (
+    <Confirm title="Send your request?" ok="OK, send" onOk={onOk} onCancel={onCancel}>
+      Your request will be sent to <strong className="text-text">{SUPPORT}</strong>. Once approved, your access code will be emailed to{" "}
+      <strong className="text-text break-all">{email}</strong>.
+      <span className="text-text-3 mt-3 block text-sm">
+        Your code is valid for 7 days from when it’s sent. Your draft is saved only in the browser you build in — not on our servers — so use the same device and
+        browser to come back to it.
+      </span>
+    </Confirm>
+  );
+}
+
+function Confirm({ title, ok, danger, onOk, onCancel, children }: { title: string; ok: string; danger?: boolean; onOk: () => void; onCancel: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dlg = ref.current;
@@ -169,15 +224,12 @@ function ConfirmRequest({ email, onOk, onCancel }: { email: string; onOk: () => 
   }, []);
   return (
     <dialog ref={ref} aria-labelledby="confirm-title" onCancel={(e) => { e.preventDefault(); onCancel(); }}
-      className="card text-text m-auto w-[min(28rem,calc(100%-2rem))] p-6 backdrop:bg-black/60">
-      <h2 id="confirm-title" className="text-lg font-semibold">Send your request?</h2>
-      <p className="text-text-2 mt-3 text-[15px] leading-relaxed">
-        Your request will be sent to <strong className="text-text">{SUPPORT}</strong>. Once approved, your access code will be emailed to <strong className="text-text break-all">{email}</strong>.
-      </p>
-      <p className="text-text-3 mt-3 text-sm">Your code is valid for 7 days from when it’s sent.</p>
+      className="card text-text m-auto w-[min(28rem,calc(100%-2rem))] p-6 text-left backdrop:bg-black/60">
+      <h2 id="confirm-title" className="text-lg font-semibold">{title}</h2>
+      <p className="text-text-2 mt-3 text-[15px] leading-relaxed">{children}</p>
       <div className="mt-6 flex justify-end gap-2">
         <button type="button" className="btn" onClick={onCancel}>Cancel</button>
-        <button type="button" className="btn btn-primary" onClick={onOk} autoFocus>OK, send</button>
+        <button type="button" className={danger ? "btn border-danger text-danger hover:bg-danger/10" : "btn btn-primary"} onClick={onOk} autoFocus={!danger}>{ok}</button>
       </div>
     </dialog>
   );

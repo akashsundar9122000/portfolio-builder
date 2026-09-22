@@ -102,9 +102,10 @@ export default function Home() {
         <div className="card mt-10 flex flex-col gap-3 p-6 sm:flex-row sm:items-start sm:gap-5">
           <ShieldCheck className="text-ok size-5 shrink-0" aria-hidden />
           <p className="text-text-2 text-[15px] leading-relaxed">
-            <strong className="text-text">Your data stays with you.</strong> Your draft, photo and voice are kept in your own browser, not on a server, and
-            are deleted automatically after 7 days. A photo is only sent out when you ask for an AI outfit, and it isn’t stored. Your voice is never cloned.
-            We keep only your name, email and code, to send and check it.
+            <strong className="text-text">Your data stays with you.</strong> Your draft, photo and voice are saved only in the browser
+            you build in — never on our servers — so they don’t follow you to another device or browser. They’re deleted automatically when your access
+            code expires. A photo is only sent out when you ask for an AI outfit, and it isn’t stored. Your voice is never cloned. We keep only your name,
+            email and code, to send and check it.
           </p>
         </div>
         <p className="text-text-3 mt-10 flex items-center gap-2 text-sm">

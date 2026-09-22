@@ -69,6 +69,7 @@ const RULES = [
   "It is valid for 7 days from now.",
   "Build, preview and download (ZIP or single HTML) as often as you like while it’s valid.",
   "After 7 days it stops working — request a new code on the website to keep building.",
+  "Your draft is saved only in the browser you build in, never on our servers — come back on the same device and browser. It’s deleted when the code expires.",
 ];
 
 // ── messages ────────────────────────────────────────────────────────────
@@ -132,7 +133,7 @@ export async function mailRevoked(r: AccessRequest, c: IssuedCode, site: string)
     p(`Hi ${h(r.name)},`),
     p(`Your access code <strong style="font-family:ui-monospace,Menlo,monospace">${h(c.code)}</strong> has been revoked and no longer works. If you were in the middle of building, you’ve been signed out.`),
     c.revokeReason ? `<p style="margin:0 0 14px;padding:12px 14px;border-left:3px solid ${ACCENT};background:#faf8f4"><strong>Reason:</strong><br>${h(c.revokeReason).replace(/\n/g, "<br>")}</p>` : "",
-    p("A revoked code can’t be restored. If you’d still like to build your portfolio, request a new code on the website — your draft stays in your browser for up to 7 days after you started it."),
+    p("A revoked code can’t be restored. If you’d still like to build your portfolio, request a new code on the website. With the same email on the same browser, your draft will still be there until your original code would have expired."),
     button(site, "Request a new code"),
     p(`Questions? Just reply to this email.`),
   ].join(""));

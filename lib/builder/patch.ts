@@ -18,7 +18,7 @@ export type Op =
 
 const FORBIDDEN = [
   /^version$/,
-  /^meta\.(id|createdAt|expiresAt)$/,
+  /^meta\.(id|createdAt|expiresAt|owner)$/,
   /^portrait(\.|$)/,
   /^intro\.voice$/,
   /^resume\.file$/,

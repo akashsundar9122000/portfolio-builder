@@ -12,8 +12,9 @@ import { applyOps, setAt, type Op } from "./patch";
  * - The JSON draft autosaves to IndexedDB (debounced) on every change.
  * - Files (photo, portrait, voice, covers, resume) are separate IndexedDB
  *   entries keyed by BlobRef; the draft only holds the refs.
- * - Everything expires 7 days after the draft was started, and "Delete my
- *   draft" wipes it immediately.
+ * - The draft belongs to whoever signed in (meta.owner) and expires with
+ *   their access code; a different email signing in on this browser
+ *   starts over. "Delete my draft" wipes it immediately.
  * - Orphaned blobs (e.g. an old photo that was replaced) are collected on
  *   save.
  *
@@ -26,6 +27,8 @@ import { applyOps, setAt, type Op } from "./patch";
 const db = typeof indexedDB !== "undefined" ? createStore("portfolio-builder", "kv") : undefined;
 const DRAFT_KEY = "draft:v1";
 const BACKUP_KEY = "pb:draft-backup";
+/** A tiny mirror of the draft's owner, so the landing page can warn before a different email signs in. */
+export const OWNER_KEY = "pb:draft-owner";
 
 interface Saved { savedAt: number; draft: unknown }
 
@@ -125,6 +128,23 @@ export async function loadDraft(): Promise<DraftT> {
   return draft;
 }
 
+/**
+ * Binds this browser's draft to the signed-in person. Someone else's draft
+ * is deleted first (the landing page warned them), an unowned draft is
+ * adopted, and the draft now expires when their access code does.
+ */
+export async function claimDraft(owner: string, expiresAt?: number): Promise<void> {
+  await loadDraft();
+  if (draft.meta.owner && draft.meta.owner !== owner) await wipeEverything();
+  const meta = { ...draft.meta, owner, expiresAt: expiresAt ?? draft.meta.expiresAt };
+  if (meta.owner !== draft.meta.owner || meta.expiresAt !== draft.meta.expiresAt) commit({ ...draft, meta }, false);
+  try {
+    localStorage.setItem(OWNER_KEY, JSON.stringify({ owner, expiresAt: meta.expiresAt }));
+  } catch {
+    // storage blocked: the builder still works, the landing page just can't warn
+  }
+}
+
 export function getDraft(): DraftT {
   return draft;
 }
@@ -208,6 +228,7 @@ export async function blobUrl(ref: string | null | undefined): Promise<string | 
 export async function wipeEverything() {
   try {
     localStorage.removeItem(BACKUP_KEY);
+    localStorage.removeItem(OWNER_KEY);
   } catch {
     // nothing stored
   }

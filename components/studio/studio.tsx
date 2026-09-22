@@ -113,7 +113,7 @@ export function Studio() {
           <KeyRound className="text-accent size-4" aria-hidden />
           <span>Code for <strong className="text-text">{access.email}</strong></span>
           <span className="text-text-3">
-            Valid until {new Date(access.expiresAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} — build and download as often as you like until then.
+            Valid until {new Date(access.expiresAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} — build and download as often as you like until then. Your draft is saved only in this browser.
           </span>
         </p>
       )}

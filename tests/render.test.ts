@@ -50,6 +50,7 @@ describe("assistant patches", () => {
   it("refuses protected paths", () => {
     expect(pathAllowed("portrait.photo")).toBe(false);
     expect(pathAllowed("meta.expiresAt")).toBe(false);
+    expect(pathAllowed("meta.owner")).toBe(false);
     expect(pathAllowed("projects.0.cover")).toBe(false);
     expect(pathAllowed("identity.bioLong")).toBe(true);
     expect(pathAllowed("__proto__.x")).toBe(false);
