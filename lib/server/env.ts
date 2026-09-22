@@ -9,7 +9,9 @@ import { z } from "zod";
 const Schema = z.object({
   NVIDIA_API_KEY: z.string().min(10).optional(),
   NVIDIA_BASE_URL: z.string().url().default("https://integrate.api.nvidia.com/v1"),
-  NVIDIA_MODEL: z.string().default("nvidia/nemotron-3-super-120b-a12b"),
+  NVIDIA_MODEL: z.string().optional(), // comma-separated; defaults to DEFAULT_MODELS in lib/ai/nvidia.ts
+  POLLINATIONS_API_KEY: z.string().optional(),
+  AI_TEXT_FALLBACK: z.enum(["pollinations", "none"]).default("pollinations"),
   CREATE_INVITE_CODES: z.string().optional(), // "CODE:limit,CODE2:limit"
   CREATE_SESSION_SECRET: z.string().min(16).optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
@@ -22,7 +24,7 @@ const blankToUndefined = Object.fromEntries(
 
 export const env = Schema.parse(blankToUndefined);
 
-export const hasText = Boolean(env.NVIDIA_API_KEY);
+export const hasText = Boolean(env.NVIDIA_API_KEY || (env.POLLINATIONS_API_KEY && env.AI_TEXT_FALLBACK !== "none"));
 // image generation is configured in lib/imagegen/config.ts (Pollinations, AI Horde)
 
 

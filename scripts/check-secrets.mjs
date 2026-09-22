@@ -1,13 +1,13 @@
 /**
  * Proves the negative: no API key in anything shipped to the browser.
  * Scans .next/static for known key shapes and for the literal values of
- * every secret in .env.local.
+ * every secret in .env and .env.local.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const secrets = existsSync(".env.local")
-  ? readFileSync(".env.local", "utf8").split("\n").map((l) => l.split("=").slice(1).join("=").trim()).filter((v) => v.length >= 12)
+const secrets = [".env", ".env.local"].some((f) => existsSync(f))
+  ? [".env", ".env.local"].filter((f) => existsSync(f)).map((f) => readFileSync(f, "utf8")).join("\n").split("\n").map((l) => l.split("=").slice(1).join("=").trim()).filter((v) => v.length >= 12)
   : [];
 const shapes = [/nvapi-[A-Za-z0-9_-]{20,}/, /AIza[0-9A-Za-z_-]{30,}/, /AQ\.[A-Za-z0-9_-]{30,}/, /sk-[A-Za-z0-9]{24,}/];
 
@@ -24,7 +24,7 @@ for (const file of walk(".next/static")) {
   files++;
   const text = readFileSync(file, "utf8");
   for (const re of shapes) if (re.test(text)) { hits++; console.error(`  key-shaped string in ${file}`); }
-  for (const s of secrets) if (text.includes(s)) { hits++; console.error(`  a .env.local value appears in ${file}`); }
+  for (const s of secrets) if (text.includes(s)) { hits++; console.error(`  a .env value appears in ${file}`); }
 }
 if (hits) { console.error(`\n${hits} secret leak(s).`); process.exit(1); }
 console.log(`Scanned ${files} client files: no secrets.`);

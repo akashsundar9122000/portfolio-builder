@@ -5,7 +5,7 @@ import { ASSIST_SYSTEM } from "@/lib/ai/prompts";
 import { requireSession, fail } from "@/lib/server/guard";
 import { consume } from "@/lib/server/limits";
 
-export const maxDuration = 60;
+export const maxDuration = 120; // hedged AI calls finish within 50 s; the assistant may retry once
 
 const Body = z.object({
   draft: z.string().max(40_000), // JSON, binary refs already stripped by the client
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     return fail("The assistant couldn't produce a valid change — try rephrasing.", 502);
   } catch (e) {
     if (e instanceof AiUnavailable) return fail(e.message, 503);
-    return fail(e instanceof Error ? e.message : "AI error", 502);
+    console.error(JSON.stringify({ event: "ai_route_error", route: "assist", message: e instanceof Error ? e.message.slice(0, 200) : "unknown" }));
+    return fail("The AI couldn’t respond just now — please try again in a minute.", 502);
   }
 }

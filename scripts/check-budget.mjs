@@ -2,14 +2,14 @@
 import { spawn } from "node:child_process";
 import { chromium } from "@playwright/test";
 import { gzipSync } from "node:zlib";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const PORT = 3191;
 const BUDGET = { "/": 90, "/build": 230, "/studio": 250 };
 const server = spawn("pnpm", ["start", "-p", String(PORT)], { stdio: "ignore", detached: true });
 const base = `http://127.0.0.1:${PORT}`;
 for (let i = 0; i < 60; i++) { try { await fetch(base); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
-const code = (readFileSync(".env.local", "utf8").match(/CREATE_INVITE_CODES=([^:,\s]+)/) ?? [])[1];
+const code = ([".env", ".env.local"].filter((f) => existsSync(f)).map((f) => readFileSync(f, "utf8")).join("\n").match(/CREATE_INVITE_CODES=([^:,\s]+)/) ?? [])[1];
 const browser = await chromium.launch();
 // signed in, so /build and /studio are measured themselves — not a redirect to the landing page
 const context = await browser.newContext();

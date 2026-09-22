@@ -5,7 +5,7 @@ import { STYLE, WRITE_INSTRUCTIONS, type WriteTask } from "@/lib/ai/prompts";
 import { requireSession, fail } from "@/lib/server/guard";
 import { consume } from "@/lib/server/limits";
 
-export const maxDuration = 60;
+export const maxDuration = 120; // hedged AI calls finish within 50 s; the assistant may retry once
 
 const Body = z.object({
   task: z.enum(["bioShort", "bioLong", "script", "project", "experience", "polish", "seo"]),
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: clean });
   } catch (e) {
     if (e instanceof AiUnavailable) return fail(e.message, 503);
-    return fail(e instanceof Error ? e.message : "AI error", 502);
+    console.error(JSON.stringify({ event: "ai_route_error", route: "write", message: e instanceof Error ? e.message.slice(0, 200) : "unknown" }));
+    return fail("The AI couldn’t respond just now — please try again in a minute.", 502);
   }
 }

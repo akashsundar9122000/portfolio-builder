@@ -3,7 +3,7 @@
  * signs in with the first invite code so /build and /studio render.
  */
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { chromium, devices } from "@playwright/test";
 import { AxeBuilder } from "@axe-core/playwright";
 
@@ -11,7 +11,7 @@ const PORT = 3190;
 const server = spawn("pnpm", ["start", "-p", String(PORT)], { stdio: "ignore", detached: true });
 const base = `http://127.0.0.1:${PORT}`;
 for (let i = 0; i < 60; i++) { try { await fetch(base); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
-const code = (readFileSync(".env.local", "utf8").match(/CREATE_INVITE_CODES=([^:,\s]+)/) ?? [])[1];
+const code = ([".env", ".env.local"].filter((f) => existsSync(f)).map((f) => readFileSync(f, "utf8")).join("\n").match(/CREATE_INVITE_CODES=([^:,\s]+)/) ?? [])[1];
 
 const browser = await chromium.launch();
 let violations = 0;
