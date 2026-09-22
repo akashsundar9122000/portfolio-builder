@@ -2,16 +2,21 @@
 import { spawn } from "node:child_process";
 import { chromium } from "@playwright/test";
 import { gzipSync } from "node:zlib";
+import { readFileSync } from "node:fs";
 
 const PORT = 3191;
 const BUDGET = { "/": 90, "/build": 230, "/studio": 250 };
 const server = spawn("pnpm", ["start", "-p", String(PORT)], { stdio: "ignore", detached: true });
 const base = `http://127.0.0.1:${PORT}`;
 for (let i = 0; i < 60; i++) { try { await fetch(base); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
+const code = (readFileSync(".env.local", "utf8").match(/CREATE_INVITE_CODES=([^:,\s]+)/) ?? [])[1];
 const browser = await chromium.launch();
+// signed in, so /build and /studio are measured themselves — not a redirect to the landing page
+const context = await browser.newContext();
+if (code) await context.request.post(`${base}/api/session`, { data: { code } });
 let over = 0;
 for (const [route, kb] of Object.entries(BUDGET)) {
-  const page = await browser.newPage();
+  const page = await context.newPage();
   let bytes = 0;
   page.on("response", async (r) => {
     if (r.request().resourceType() !== "script") return;
@@ -19,6 +24,7 @@ for (const [route, kb] of Object.entries(BUDGET)) {
     bytes += gzipSync(await r.body().catch(() => Buffer.alloc(0))).length;
   });
   await page.goto(base + route, { waitUntil: "networkidle" });
+  if (new URL(page.url()).pathname !== route) console.log(`  (warning: ${route} redirected to ${page.url()})`);
   const size = bytes / 1024;
   const ok = size <= kb;
   if (!ok) over++;

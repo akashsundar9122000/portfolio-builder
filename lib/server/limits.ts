@@ -6,7 +6,9 @@ import { env } from "./env";
  * Upstash configured, limits are not enforced — the code itself is still
  * required. Counters expire after 30 days.
  */
-async function redis(cmd: (string | number)[]): Promise<unknown> {
+export const hasRedis = () => Boolean(env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN);
+
+export async function redis(cmd: (string | number)[]): Promise<unknown> {
   const res = await fetch(env.UPSTASH_REDIS_REST_URL!, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`, "Content-Type": "application/json" },

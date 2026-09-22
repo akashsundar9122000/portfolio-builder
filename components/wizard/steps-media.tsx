@@ -8,6 +8,7 @@ import { getBlob, mutate, putBlob, useDraft } from "@/lib/builder/store";
 import { OUTFITS } from "@/lib/builder/outfits";
 import { THEMES } from "@/lib/builder/themes";
 import { blobToDataUrl, cutout, dataUrlToBlob, downscale } from "@/lib/media/image";
+import { runGeneration, statusLabel, type UiStatus } from "@/lib/imagegen/client";
 
 async function makeCutout(ref: string): Promise<string | null> {
   const blob = await getBlob(ref);
@@ -77,6 +78,7 @@ export function StepOutfit({ imageAvailable }: { imageAvailable: boolean }) {
   const d = useDraft();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [phase, setPhase] = useState<{ s: UiStatus; ms: number }>({ s: "PENDING", ms: 0 });
   const outfit = OUTFITS.find((o) => o.id === d.portrait.outfitId) ?? OUTFITS[0];
   const canGenerate = imageAvailable && Boolean(d.portrait.photo) && d.portrait.consent && outfit.id !== "keep";
 
@@ -87,10 +89,12 @@ export function StepOutfit({ imageAvailable }: { imageAvailable: boolean }) {
       const photo = await getBlob(d.portrait.photo);
       if (!photo) throw new Error("Upload a photo first.");
       const dataUrl = await blobToDataUrl(await downscale(photo, 1024, "image/jpeg", 0.88));
-      const res = await fetch("/api/portrait", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photo: dataUrl, outfitId: outfit.id, color: d.portrait.outfitColor, consent: true }) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Couldn’t generate the outfit.");
-      const ref = await putBlob(await downscale(await dataUrlToBlob(data.image), 1400, "image/png"));
+      setPhase({ s: "PENDING", ms: 0 });
+      const imageUrl = await runGeneration(
+        () => fetch("/api/portrait", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photo: dataUrl, outfitId: outfit.id, color: d.portrait.outfitColor, consent: true }) }),
+        { onStatus: (s, ms) => setPhase({ s, ms }) },
+      );
+      const ref = await putBlob(await downscale(await dataUrlToBlob(imageUrl), 1400, "image/png"));
       mutate((x) => { x.portrait.variants = [...x.portrait.variants, ref].slice(-6); });
       await choose(ref);
     } catch (e) {
@@ -143,7 +147,7 @@ export function StepOutfit({ imageAvailable }: { imageAvailable: boolean }) {
                 {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />} {d.portrait.variants.length ? "Try another" : "Dress me"}
               </button>
               {!d.portrait.consent && d.portrait.photo && <span className="text-text-3 text-sm">Tick the consent box in the photo step first.</span>}
-              {busy && <span role="status" className="text-text-2 text-sm">Tailoring… about 15 seconds.</span>}
+              {busy && <span role="status" className="text-text-2 text-sm">{statusLabel(phase.s, phase.ms) || "Tailoring…"}</span>}
             </div>
             {err && <p role="alert" className="text-danger text-sm">{err}</p>}
           </div>

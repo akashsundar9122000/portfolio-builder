@@ -8,7 +8,9 @@ import { mutate, putBlob, update, useDraft } from "@/lib/builder/store";
 import { uid } from "@/lib/builder/defaults";
 import { SOCIAL_KINDS, type AwardItem, type EducationItem, type ExperienceItem, type ProjectItem, type SkillGroupItem } from "@/lib/builder/schema";
 import { aiWrite, summarize } from "@/lib/builder/ai-client";
-import { downscale } from "@/lib/media/image";
+import { dataUrlToBlob, downscale } from "@/lib/media/image";
+import { runGeneration, statusLabel, type UiStatus } from "@/lib/imagegen/client";
+import { useBuilderFeatures } from "./features";
 
 const grid2 = "grid gap-5 sm:grid-cols-2";
 
@@ -155,10 +157,39 @@ export function StepEducation() {
 
 function CoverField({ index }: { index: number }) {
   const d = useDraft();
-  const has = Boolean(d.projects[index].cover);
+  const features = useBuilderFeatures();
+  const p = d.projects[index];
+  const has = Boolean(p.cover);
+  const [phase, setPhase] = useState<{ s: UiStatus | "IDLE"; ms: number }>({ s: "IDLE", ms: 0 });
+  const [err, setErr] = useState("");
+  const busy = phase.s !== "IDLE";
+
+  async function generate() {
+    setErr("");
+    setPhase({ s: "PENDING", ms: 0 });
+    try {
+      const prompt = `A clean, modern hero illustration for a software product called "${p.title}"${p.tagline ? `: ${p.tagline}` : ""}. Abstract interface shapes, soft lighting, rich depth, no text, no letters, no logos.`;
+      const url = await runGeneration(
+        () => fetch("/api/generate-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, model: "ILLUSTRATION", width: 1280, height: 800 }) }),
+        { onStatus: (s, ms) => setPhase({ s, ms }) },
+      );
+      const ref = await putBlob(await downscale(await dataUrlToBlob(url), 1600, "image/webp", 0.85));
+      mutate((x) => { x.projects[index].cover = ref; });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Image generation failed. Please try again.");
+    } finally {
+      setPhase({ s: "IDLE", ms: 0 });
+    }
+  }
+
   return (
-    <Field label="Screenshot (optional)" hint="Without one, a designed cover with the project’s initials is used.">
-      <div className="flex flex-wrap gap-2">
+    <Field label="Cover image (optional)" hint="Upload a screenshot, or generate an illustration. Without either, a designed cover with the project’s initials is used.">
+      <div className="flex flex-wrap items-center gap-2">
+        {features.generate && (
+          <button type="button" className="btn" disabled={busy || !p.title.trim()} onClick={generate} title={p.title.trim() ? undefined : "Name the project first"}>
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />} {has ? "Generate another" : "Generate a cover"}
+          </button>
+        )}
         <label className="btn cursor-pointer">
           <Upload className="size-4" aria-hidden /> {has ? "Replace screenshot" : "Upload screenshot"}
           <input type="file" accept="image/*" className="sr-only" onChange={async (e) => {
@@ -168,8 +199,10 @@ function CoverField({ index }: { index: number }) {
             mutate((x) => { x.projects[index].cover = ref; });
           }} />
         </label>
-        {has && <button type="button" className="btn" onClick={() => mutate((x) => { x.projects[index].cover = null; })}>Remove</button>}
+        {has && <button type="button" className="btn" disabled={busy} onClick={() => mutate((x) => { x.projects[index].cover = null; })}>Remove</button>}
       </div>
+      {busy && <p role="status" className="text-text-2 text-sm">{statusLabel(phase.s, phase.ms)}</p>}
+      {err && <p role="alert" className="text-danger text-sm">{err}</p>}
     </Field>
   );
 }
