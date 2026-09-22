@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Camera, Download, Mic, Palette, ShieldCheck, Sparkles } from "lucide-react";
 import { InviteForm } from "@/components/landing/invite-form";
 
@@ -27,7 +28,9 @@ export default function Home() {
         </p>
 
         <div className="relative mt-10">
-          <InviteForm />
+          <Suspense>
+            <InviteForm />
+          </Suspense>
           <p className="text-text-3 mt-4 text-sm">Invite only for now — ask Akash for a code.</p>
         </div>
 

@@ -12,7 +12,8 @@ export async function POST(req: Request) {
   await new Promise((r) => setTimeout(r, 400));
   const code = findCode(parsed.data.code);
   if (!code) return NextResponse.json({ error: "That code isn't valid." }, { status: 401 });
-  await startSession(code);
+  const https = new URL(req.url).protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
+  await startSession(code, https);
   return NextResponse.json({ ok: true, features: { text: hasText, image: hasImage } });
 }
 

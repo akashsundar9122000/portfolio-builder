@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 export function InviteForm() {
   const router = useRouter();
   const [code, setCode] = useState("");
-  const [error, setError] = useState("");
+  // sent back here from /build or /studio without a session
+  const expired = useSearchParams().has("expired");
+  const [error, setError] = useState(
+    expired ? "Your session has ended — enter your invite code again to continue. Your draft is safe in this browser." : "",
+  );
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {

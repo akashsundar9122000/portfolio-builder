@@ -34,12 +34,18 @@ export function findCode(input: string): InviteCode | undefined {
   return inviteCodes().find((c) => same(c.code.toUpperCase(), wanted));
 }
 
-export async function startSession(code: InviteCode) {
+/**
+ * `secure` must follow the actual protocol: browsers silently drop a
+ * Secure cookie on plain http (Safari even on localhost, every browser on
+ * a LAN address), which made the invite look like it "did nothing".
+ * Production on Vercel is always https, so it stays Secure there.
+ */
+export async function startSession(code: InviteCode, secure: boolean) {
   const exp = Math.floor(Date.now() / 1000) + MAX_AGE;
   const payload = `${code.code}.${exp}`;
   (await cookies()).set(COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     sameSite: "lax",
     path: "/",
     maxAge: MAX_AGE,
