@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+ * The builder's own interface: Noir Gold, the same design language as
+ * Akash's portfolio (tokens copied, not imported — this is a separate app).
+ * Dark only: the builder is a studio, and the preview shows the chosen
+ * theme on its own.
+ */
+
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-sunken: var(--bg-sunken);
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-hair: var(--hair);
+  --color-hair-strong: var(--hair-strong);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui;
+  --font-mono: var(--font-mono-face), ui-monospace, monospace;
+  --font-script: var(--font-script-face), cursive;
+}
+
+:root {
+  --bg: #0b0b0d;
+  --bg-sunken: #070708;
+  --surface: #141417;
+  --surface-raised: #1c1c20;
+  --text: #f3f1ec;
+  --text-2: #bdb8ae;
+  --text-3: #928d84;
+  --accent: #eba84d;
+  --accent-ink: #0b0b0d;
+  --hair: rgba(255, 255, 255, 0.08);
+  --hair-strong: rgba(255, 255, 255, 0.18);
+  --danger: #ff8b7a;
+  --ok: #7cc490;
+  --grad: linear-gradient(100deg, #f7d58c, #eba84d 55%, #d98a2b);
+  color-scheme: dark;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+@utility grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--hair-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background-color 0.18s, border-color 0.18s, color 0.18s, opacity 0.18s;
+  cursor: pointer;
+  &:hover { border-color: var(--accent); color: var(--accent); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+}
+
+@utility btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  &:hover { background: #f5c070; border-color: #f5c070; color: var(--accent-ink); }
+}
+
+@utility input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--hair-strong);
+  color: var(--text);
+  font-size: 16px; /* 16px stops iOS zooming into the field */
+  line-height: 1.5;
+  transition: border-color 0.15s;
+  &::placeholder { color: color-mix(in srgb, var(--text-3) 70%, transparent); }
+  &:hover { border-color: rgba(255, 255, 255, 0.28); }
+  &:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(235, 168, 77, 0.18); }
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--hair-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+
+.spot-bg {
+  background:
+    radial-gradient(60% 50% at 78% 0%, rgba(235, 168, 77, 0.14), transparent 70%),
+    var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
