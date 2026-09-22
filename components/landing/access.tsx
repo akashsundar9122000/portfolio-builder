@@ -14,7 +14,7 @@ const SUPPORT = "support.folioforge@gmail.com";
 const ENDED: Record<string, string> = {
   used: "Your code has been used — you downloaded both the ZIP and the single HTML file. Request a new code to build another portfolio.",
   expired: "Your code has expired (codes last 7 days). Request a new one below — your draft is still in this browser if it’s under 7 days old.",
-  revoked: "That code was replaced or cancelled. Use the newest code we emailed you, or request a new one.",
+  revoked: "Your access code was revoked, so you’ve been signed out. A revoked code can’t be restored — request a new one below if you’d like to keep building.",
 };
 
 type Tab = "signin" | "request";

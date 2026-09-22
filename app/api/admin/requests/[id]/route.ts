@@ -1,15 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { fail } from "@/lib/server/guard";
-import { baseUrl, isAdmin, requestSigOk } from "@/lib/server/admin";
-import { getCode, getRequest, issueCode, rejectRequest, revokeCode } from "@/lib/server/codes";
-import { mailCode, mailRejected } from "@/lib/server/mail";
+import { baseUrl, isAdmin, passwordMatches, requestSigOk } from "@/lib/server/admin";
+import { adminRevoke, getCode, getRequest, issueCode, rejectRequest } from "@/lib/server/codes";
+import { mailCode, mailRejected, mailRevoked } from "@/lib/server/mail";
 
 /** Akash's actions on one request: send a code, reject, revoke, or resend the code email. */
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("send"), sig: z.string(), code: z.string().max(20), note: z.string().max(600).default("") }),
   z.object({ action: z.literal("reject"), sig: z.string(), note: z.string().max(600).default("") }),
-  z.object({ action: z.literal("revoke"), sig: z.string() }),
+  z.object({ action: z.literal("revoke"), sig: z.string(), password: z.string().max(200), reason: z.string().max(600).default("") }),
   z.object({ action: z.literal("resend"), sig: z.string() }),
 ]);
 
@@ -39,10 +39,19 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/admin/reque
         return NextResponse.json({ ok: true, mailed });
       }
       case "revoke": {
+        // irreversible, so it asks for the admin password again
+        if (!passwordMatches(body.password)) {
+          await new Promise((r) => setTimeout(r, 700));
+          return fail("Wrong password — the code was not revoked.", 401);
+        }
         const r = await getRequest(id);
         if (!r?.code) return fail("This request has no code.");
-        await revokeCode(r.code);
-        return NextResponse.json({ ok: true });
+        const c = await adminRevoke(r.code, body.reason);
+        const mailed = await mailRevoked(r, c, baseUrl(req)).then(() => true, (e) => {
+          console.error(JSON.stringify({ route: "admin/revoke", mail: String(e) }));
+          return false;
+        });
+        return NextResponse.json({ ok: true, mailed });
       }
       case "resend": {
         const r = await getRequest(id);

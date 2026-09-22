@@ -127,3 +127,16 @@ export async function mailRejected(r: AccessRequest) {
   const text = `Hi ${r.name},\n\nThank you for asking. We aren't able to issue you an access code right now.${r.note ? `\n\n${r.note}` : ""}\n\nIf you think this is a mistake, just reply to this email.`;
   await send(r.email, "About your FolioForge request", html, text);
 }
+
+export async function mailRevoked(r: AccessRequest, c: IssuedCode, site: string) {
+  const html = layout("Your FolioForge access code was revoked", [
+    p(`Hi ${h(r.name)},`),
+    p(`Your access code <strong style="font-family:ui-monospace,Menlo,monospace">${h(c.code)}</strong> has been revoked and no longer works. If you were in the middle of building, you’ve been signed out.`),
+    c.revokeReason ? `<p style="margin:0 0 14px;padding:12px 14px;border-left:3px solid ${ACCENT};background:#faf8f4"><strong>Reason:</strong><br>${h(c.revokeReason).replace(/\n/g, "<br>")}</p>` : "",
+    p("A revoked code can’t be restored. If you’d still like to build your portfolio, request a new code on the website — your draft stays in your browser for up to 7 days after you started it."),
+    button(site, "Request a new code"),
+    p(`Questions? Just reply to this email.`),
+  ].join(""));
+  const text = `Hi ${r.name},\n\nYour access code ${c.code} has been revoked and no longer works. If you were in the middle of building, you've been signed out.${c.revokeReason ? `\n\nReason: ${c.revokeReason}` : ""}\n\nA revoked code can't be restored. If you'd still like to build your portfolio, request a new code: ${site}\n\nQuestions? Just reply to this email.`;
+  await send(r.email, "Your FolioForge access code was revoked", html, text);
+}

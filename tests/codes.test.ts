@@ -33,7 +33,7 @@ vi.mock("@/lib/server/limits", () => ({
 }));
 
 const codes = await import("@/lib/server/codes");
-const { createRequest, issueCode, checkLogin, recordDownload, previewCode, rejectRequest, revokeCode, listRequests, normalCode, isCodeShape, generateCode } = codes;
+const { createRequest, issueCode, checkLogin, recordDownload, previewCode, rejectRequest, revokeCode, adminRevoke, listRequests, normalCode, isCodeShape, generateCode } = codes;
 
 async function requestAndIssue(email = "Ada@Example.com", ip = "1.1.1.1") {
   const r = await createRequest({ name: "Ada", email, reason: "", ip });
@@ -100,6 +100,27 @@ describe("issuing", () => {
     const { code } = await requestAndIssue();
     await revokeCode(code.code);
     expect(await checkLogin("ada@example.com", code.code)).toEqual({ ok: false, reason: "revoked" });
+  });
+});
+
+describe("admin revoke", () => {
+  it("revokes an active code for good, keeps the reason, and frees the email", async () => {
+    const { code } = await requestAndIssue();
+    const r = await adminRevoke(code.code, "  Shared publicly  ");
+    expect(r.status).toBe("revoked");
+    expect(r.revokeReason).toBe("Shared publicly");
+    expect(r.revokedAt).toBeTypeOf("number");
+    expect(await checkLogin("ada@example.com", code.code)).toEqual({ ok: false, reason: "revoked" });
+    // no way back: revoking again fails, and a new request is allowed
+    await expect(adminRevoke(code.code, "")).rejects.toThrow(/already revoked/);
+    expect((await createRequest({ name: "Ada", email: "ada@example.com", reason: "", ip: "7" })).ok).toBe(true);
+  });
+
+  it("refuses codes that are already used", async () => {
+    const { code } = await requestAndIssue();
+    await recordDownload(code.code, "zip");
+    await recordDownload(code.code, "html");
+    await expect(adminRevoke(code.code, "")).rejects.toThrow(/already used/);
   });
 });
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdmin, requestSig } from "@/lib/server/admin";
 import { listRequests, StoreMissing, type RequestRow } from "@/lib/server/codes";
 import { StatusChip, rowState, when, type RowState } from "@/components/admin/status";
-import { AdminSignOut } from "@/components/admin/admin-actions";
+import { AdminSignOut, RevokeButton } from "@/components/admin/admin-actions";
 
 // reads the admin cookie on every request
 export const dynamic = "force-dynamic";
@@ -47,7 +47,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
       </nav>
 
       <div className="card mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="label">
             <tr className="border-hair border-b">
               <th scope="col" className="px-4 py-3 font-normal">Requested</th>
@@ -55,6 +55,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
               <th scope="col" className="px-4 py-3 font-normal">Code</th>
               <th scope="col" className="px-4 py-3 font-normal">Downloads</th>
               <th scope="col" className="px-4 py-3 font-normal">Status</th>
+              <th scope="col" className="px-4 py-3 font-normal"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -70,10 +71,15 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
                 <td className="px-4 py-3 font-mono">{r.request.code ?? "—"}</td>
                 <td className="text-text-2 px-4 py-3">{r.code ? (["zip", "html"] as const).map((k) => `${k.toUpperCase()} ${r.code!.downloads.includes(k) ? "✓" : "·"}`).join("  ") : "—"}</td>
                 <td className="px-4 py-3"><StatusChip state={rowState(r)} /></td>
+                <td className="px-4 py-3 text-right">
+                  {rowState(r) === "active" && r.request.code && (
+                    <RevokeButton compact id={r.request.id} sig={requestSig(r.request.id)} email={r.request.email} code={r.request.code} />
+                  )}
+                </td>
               </tr>
             ))}
             {!shown.length && (
-              <tr><td colSpan={5} className="text-text-3 px-4 py-10 text-center">Nothing here yet.</td></tr>
+              <tr><td colSpan={6} className="text-text-3 px-4 py-10 text-center">Nothing here yet.</td></tr>
             )}
           </tbody>
         </table>

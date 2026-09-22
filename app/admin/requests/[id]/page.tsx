@@ -35,6 +35,8 @@ export default async function AdminRequest({ params, searchParams }: PageProps<"
     facts.push(["Valid until", when(code.expiresAt)]);
     facts.push(["Downloads", (["zip", "html"] as const).map((k) => `${k.toUpperCase()} ${code.downloads.includes(k) ? "✓" : "—"}`).join("   ")]);
     if (code.usedAt) facts.push(["Used up", when(code.usedAt)]);
+    if (code.revokedAt) facts.push(["Revoked", when(code.revokedAt)]);
+    if (code.revokeReason) facts.push(["Revoke reason", <span key="rr" className="whitespace-pre-line">{code.revokeReason}</span>]);
   }
 
   return (
@@ -52,7 +54,7 @@ export default async function AdminRequest({ params, searchParams }: PageProps<"
           </div>
         ))}
       </dl>
-      <RequestActions id={id} sig={sig} state={state} firstCode={firstCode} email={request.email} />
+      <RequestActions id={id} sig={sig} state={state} firstCode={firstCode} email={request.email} issuedCode={request.code} />
     </div>
   );
 }

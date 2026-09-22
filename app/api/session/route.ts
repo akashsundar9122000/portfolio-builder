@@ -16,7 +16,7 @@ const WHY: Record<string, string> = {
   invalid: "That email and code don’t match. Check both — the code is in the email we sent you.",
   used: "This code has already been used to download a portfolio. Request a new code to build another.",
   expired: "This code has expired (codes last 7 days). Request a new one below.",
-  revoked: "This code was replaced or cancelled. Use the newest code we emailed you, or request a new one.",
+  revoked: "This code was revoked and can’t be used again. Request a new code below.",
 };
 
 export async function POST(req: Request) {

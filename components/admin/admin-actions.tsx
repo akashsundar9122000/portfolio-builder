@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Loader2, LogOut, Mail, RefreshCw, Send, X } from "lucide-react";
+import { AlertTriangle, Ban, Loader2, LogOut, Mail, RefreshCw, Send, X } from "lucide-react";
 import type { RowState } from "./status";
 
 async function post(url: string, body?: unknown) {
@@ -22,7 +22,7 @@ export function AdminSignOut() {
 }
 
 /** Pending: preview/regenerate a code, add a note, send or reject. Sent: resend or revoke. */
-export function RequestActions({ id, sig, state, firstCode, email }: { id: string; sig: string; state: RowState; firstCode?: string; email: string }) {
+export function RequestActions({ id, sig, state, firstCode, email, issuedCode }: { id: string; sig: string; state: RowState; firstCode?: string; email: string; issuedCode?: string }) {
   const router = useRouter();
   const [code, setCode] = useState(firstCode ?? "");
   const [note, setNote] = useState("");
@@ -86,12 +86,7 @@ export function RequestActions({ id, sig, state, firstCode, email }: { id: strin
           <button type="button" className="btn" disabled={Boolean(busy)} onClick={() => run("resend", async () => { await post(`/api/admin/requests/${id}`, { action: "resend", sig }); return `Code emailed again to ${email}.`; })}>
             {spin("resend", Mail)} Resend email
           </button>
-          <button type="button" className="btn hover:text-danger hover:border-danger" disabled={Boolean(busy)} onClick={() => {
-            if (!confirm("Revoke this code? It stops working immediately, including any open session.")) return;
-            void run("revoke", async () => { await post(`/api/admin/requests/${id}`, { action: "revoke", sig }); return "Code revoked."; });
-          }}>
-            {spin("revoke", Ban)} Revoke code
-          </button>
+          <RevokeButton id={id} sig={sig} email={email} code={issuedCode ?? ""} onDone={(text) => setMsg({ tone: "ok", text })} />
         </div>
       )}
 
@@ -101,5 +96,88 @@ export function RequestActions({ id, sig, state, firstCode, email }: { id: strin
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Revoke an active code. Irreversible, so it spells that out and asks for
+ * the admin password again; the person is emailed and signed out.
+ */
+export function RevokeButton({ id, sig, email, code, compact, onDone }: { id: string; sig: string; email: string; code: string; compact?: boolean; onDone?: (text: string) => void }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" className={`btn hover:text-danger hover:border-danger ${compact ? "min-h-9 px-3 text-[11px]" : ""}`} onClick={() => setOpen(true)}>
+        <Ban className="size-4" aria-hidden /> {compact ? "Revoke" : "Revoke code"}
+      </button>
+      {open && (
+        <RevokeDialog
+          id={id} sig={sig} email={email} code={code}
+          onClose={() => setOpen(false)}
+          onRevoked={(mailed) => {
+            setOpen(false);
+            onDone?.(mailed ? `Code revoked. ${email} has been emailed.` : "Code revoked, but the email to them failed.");
+            router.refresh();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function RevokeDialog({ id, sig, email, code, onClose, onRevoked }: { id: string; sig: string; email: string; code: string; onClose: () => void; onRevoked: (mailed: boolean) => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [password, setPassword] = useState("");
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const dlg = ref.current;
+    if (dlg && !dlg.open) dlg.showModal();
+  }, []);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const r = await post(`/api/admin/requests/${id}`, { action: "revoke", sig, password, reason });
+      onRevoked(Boolean(r.mailed));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn’t revoke the code.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <dialog ref={ref} aria-labelledby={`revoke-${id}`} onCancel={(e) => { e.preventDefault(); if (!busy) onClose(); }}
+      className="card text-text m-auto w-[min(30rem,calc(100%-2rem))] p-6 text-left backdrop:bg-black/70">
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="text-danger mt-0.5 size-5 shrink-0" aria-hidden />
+          <div>
+            <h2 id={`revoke-${id}`} className="text-lg font-semibold">Revoke <span className="font-mono">{code}</span>?</h2>
+            <ul className="text-text-2 mt-2 list-disc space-y-1 pl-4 text-sm leading-relaxed">
+              <li>It stops working immediately and <strong className="text-text">{email}</strong> is signed out.</li>
+              <li>They get an email saying the code was revoked{reason.trim() ? ", with your reason" : ""}.</li>
+              <li><strong className="text-text">This can’t be undone.</strong> To build again they must request a new code.</li>
+            </ul>
+          </div>
+        </div>
+        <label className="text-sm" htmlFor={`revoke-reason-${id}`}>Reason <span className="text-text-3">(optional, included in the email)</span></label>
+        <textarea id={`revoke-reason-${id}`} className="input -mt-2 min-h-20" maxLength={600} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <label className="text-sm" htmlFor={`revoke-pw-${id}`}>Admin password</label>
+        <input id={`revoke-pw-${id}`} type="password" autoComplete="current-password" className="input -mt-2" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} aria-invalid={Boolean(error)} autoFocus />
+        {error && <p role="alert" className="border-danger/40 bg-danger/10 text-danger rounded-xl border px-4 py-3 text-sm">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn" onClick={onClose} disabled={busy}>Cancel</button>
+          <button type="submit" className="btn border-danger text-danger hover:bg-danger/10" disabled={busy || !password}>
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Ban className="size-4" aria-hidden />} Revoke for good
+          </button>
+        </div>
+      </form>
+    </dialog>
   );
 }

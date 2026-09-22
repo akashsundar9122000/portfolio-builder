@@ -59,6 +59,9 @@ export interface IssuedCode {
   expiresAt: number;
   status: "active" | "used" | "revoked";
   usedAt?: number;
+  revokedAt?: number;
+  /** why the admin revoked it (shown to the person in the email) */
+  revokeReason?: string;
 }
 
 export class StoreMissing extends Error {
@@ -235,11 +238,28 @@ export async function getCode(code: string): Promise<IssuedCode | undefined> {
   return getJson<IssuedCode>(`ff:code:${normalCode(code)}`);
 }
 
+/** Silently retires a code (used when a newer code replaces it for the same email). */
 export async function revokeCode(code: string): Promise<void> {
   const c = await getCode(code);
   if (!c) return;
-  if (c.status === "active") await putJson(`ff:code:${c.code}`, { ...c, status: "revoked" } satisfies IssuedCode);
+  if (c.status === "active") await putJson(`ff:code:${c.code}`, { ...c, status: "revoked", revokedAt: Date.now() } satisfies IssuedCode);
   await clearEmailIndex(c);
+}
+
+/**
+ * The admin's revoke: only a currently active code, and there is no way
+ * back — the person has to request a new code. Their session ends on its
+ * next request, because sessions re-check the code's status.
+ */
+export async function adminRevoke(code: string, reason: string): Promise<IssuedCode> {
+  const c = await getCode(code);
+  if (!c) throw new Error("Code not found.");
+  const state = codeStatus(c);
+  if (state !== "active") throw new Error(`This code is already ${state} — only an active code can be revoked.`);
+  const revoked: IssuedCode = { ...c, status: "revoked", revokedAt: Date.now(), revokeReason: reason.trim() || undefined };
+  await putJson(`ff:code:${c.code}`, revoked);
+  await clearEmailIndex(c);
+  return revoked;
 }
 
 async function clearEmailIndex(c: IssuedCode) {
