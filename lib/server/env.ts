@@ -13,6 +13,8 @@ const Schema = z.object({
   GEMINI_API_KEY: z.string().min(10).optional(),
   GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
   NVIDIA_IMAGE_MODEL: z.string().optional(),
+  CLOUDFLARE_ACCOUNT_ID: z.string().min(8).optional(),
+  CLOUDFLARE_API_TOKEN: z.string().min(20).optional(),
   CREATE_INVITE_CODES: z.string().optional(), // "CODE:limit,CODE2:limit"
   CREATE_SESSION_SECRET: z.string().min(16).optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
@@ -26,7 +28,8 @@ const blankToUndefined = Object.fromEntries(
 export const env = Schema.parse(blankToUndefined);
 
 export const hasText = Boolean(env.NVIDIA_API_KEY);
-export const hasImage = Boolean(env.GEMINI_API_KEY || (env.NVIDIA_API_KEY && env.NVIDIA_IMAGE_MODEL));
+export const hasCloudflare = Boolean(env.CLOUDFLARE_ACCOUNT_ID && env.CLOUDFLARE_API_TOKEN);
+export const hasImage = hasCloudflare || Boolean(env.GEMINI_API_KEY || (env.NVIDIA_API_KEY && env.NVIDIA_IMAGE_MODEL));
 
 export interface InviteCode {
   code: string;

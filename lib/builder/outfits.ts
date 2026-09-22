@@ -45,7 +45,7 @@ export function outfitPrompt(outfit: Outfit, color: string): string {
   const clothes = outfit.prompt.replace("{color}", color || outfit.colors[0]);
   return [
     `Edit this photo so the person is wearing ${clothes}.`,
-    "Keep the person's face, identity, facial features, hairstyle, skin tone, expression and body shape exactly the same.",
+    "Keep the person's face, identity, facial features, hairstyle, facial hair, glasses, skin tone, expression and body shape exactly the same.",
     "Professional head-and-shoulders portrait, facing the camera, soft studio lighting, clean plain dark background.",
     "Photorealistic, natural fabric, no text, no logos, no accessories added.",
   ].join(" ");
