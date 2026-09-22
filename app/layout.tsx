@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
+import { UI_THEME_BOOT } from "@/components/ui-theme-boot";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,11 +11,16 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { themeColor: "#0b0b0d", colorScheme: "dark", viewportFit: "cover" };
+export const viewport: Viewport = { themeColor: "#0b0b0d", colorScheme: "dark light", viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={fontVariables}>
+    // suppressHydrationWarning: the boot script sets data-ui before React hydrates
+    <html lang="en" className={fontVariables} suppressHydrationWarning>
+      <head>
+        {/* parser-blocking on purpose: applies the saved light/dark choice before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: UI_THEME_BOOT }} />
+      </head>
       <body className="min-h-svh">{children}</body>
     </html>
   );

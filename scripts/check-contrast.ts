@@ -35,5 +35,25 @@ for (const t of THEMES) {
     if (r < 3) { failures++; console.log(`  ✗ ${t.id}: gradient stop ${stop} on stage = ${r.toFixed(2)}`); }
   }
 }
+// ── the builder's own interface (app/globals.css), dark and light ──
+import { readFileSync } from "node:fs";
+const css = readFileSync("app/globals.css", "utf8");
+function block(selector: string): Record<string, string> {
+  const start = css.indexOf(`${selector} {`);
+  const body = css.slice(start, css.indexOf("}", start));
+  return Object.fromEntries([...body.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1], m[2]]));
+}
+for (const [mode, sel] of [["dark", ":root"], ["light", ':root[data-ui="light"]']] as const) {
+  const t = block(sel);
+  for (const tone of ["text", "text-2", "text-3", "accent", "danger", "ok"]) {
+    for (const surf of ["bg", "bg-sunken", "surface", "surface-raised"]) {
+      const r = ratio(t[tone], t[surf]);
+      if (r < 4.5) { failures++; console.log(`  ✗ builder UI ${mode}: ${tone} on ${surf} = ${r.toFixed(2)}`); }
+    }
+  }
+  const fill = ratio(t["accent-ink"], t.accent);
+  if (fill < 4.5) { failures++; console.log(`  ✗ builder UI ${mode}: accent-ink on accent = ${fill.toFixed(2)}`); }
+}
+
 if (failures) { console.error(`\n${failures} contrast failure(s).`); process.exit(1); }
-console.log(`Contrast: all ${THEMES.length} themes pass.`);
+console.log(`Contrast: all ${THEMES.length} portfolio themes and the builder UI (dark + light) pass.`);

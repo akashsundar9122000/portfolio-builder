@@ -171,7 +171,7 @@ function CoverThumb({ refId, title, busy }: { refId: string | null; title: strin
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={`${title || "Project"} cover`} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-end p-4" style={{ background: "radial-gradient(90% 90% at 80% 10%, rgba(235,168,77,0.25), transparent 60%), linear-gradient(135deg, var(--surface-raised), var(--bg-sunken))" }}>
+        <div className="flex h-full items-end p-4" style={{ background: "radial-gradient(90% 90% at 80% 10%, var(--spot), transparent 60%), linear-gradient(135deg, var(--surface-raised), var(--bg-sunken))" }}>
           <span className="display grad text-5xl" aria-hidden>{initials}</span>
           <span className="label absolute right-3 top-3">Designed cover</span>
         </div>

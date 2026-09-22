@@ -43,7 +43,35 @@
   --danger: #ff8b7a;
   --ok: #7cc490;
   --grad: linear-gradient(100deg, #f7d58c, #eba84d 55%, #d98a2b);
+  --accent-hover: #f5c070;
+  --accent-ring: rgba(235, 168, 77, 0.18);
+  --spot: rgba(235, 168, 77, 0.14);
+  --input-hover: rgba(255, 255, 255, 0.28);
   color-scheme: dark;
+}
+
+/* Light: warm paper and burnt-ochre ink — the same identity in daylight.
+   Every text tone is checked against every surface in scripts/check-contrast.ts. */
+:root[data-ui="light"] {
+  --bg: #f6f2ea;
+  --bg-sunken: #ece6da;
+  --surface: #fffcf6;
+  --surface-raised: #ffffff;
+  --text: #1c1a16;
+  --text-2: #47423a;
+  --text-3: #605a50;
+  --accent: #97480f;
+  --accent-ink: #fffcf6;
+  --hair: rgba(28, 26, 22, 0.1);
+  --hair-strong: rgba(28, 26, 22, 0.22);
+  --danger: #b3261e;
+  --ok: #17693a;
+  --grad: linear-gradient(100deg, #c26a1f, #97480f 55%, #6e2f06);
+  --accent-hover: #7a3a0b;
+  --accent-ring: rgba(151, 72, 15, 0.2);
+  --spot: rgba(194, 106, 31, 0.12);
+  --input-hover: rgba(28, 26, 22, 0.35);
+  color-scheme: light;
 }
 
 @layer base {
@@ -108,7 +136,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
-  &:hover { background: #f5c070; border-color: #f5c070; color: var(--accent-ink); }
+  &:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-ink); }
 }
 
 @utility input {
@@ -123,8 +151,8 @@
   line-height: 1.5;
   transition: border-color 0.15s;
   &::placeholder { color: color-mix(in srgb, var(--text-3) 70%, transparent); }
-  &:hover { border-color: rgba(255, 255, 255, 0.28); }
-  &:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(235, 168, 77, 0.18); }
+  &:hover { border-color: var(--input-hover); }
+  &:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
 }
 
 @utility chip {
@@ -143,7 +171,7 @@
 
 .spot-bg {
   background:
-    radial-gradient(60% 50% at 78% 0%, rgba(235, 168, 77, 0.14), transparent 70%),
+    radial-gradient(60% 50% at 78% 0%, var(--spot), transparent 70%),
     var(--bg);
 }
 
