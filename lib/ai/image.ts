@@ -30,7 +30,11 @@ async function gemini(photo: { mime: string; base64: string }, prompt: string) {
     }),
     signal: AbortSignal.timeout(55_000),
   });
-  if (res.status === 429) throw new Error("The image model is at its free limit for now — try again later.");
+  if (res.status === 429) {
+    // Google's free tier gives image models no quota at all, so this is not
+    // a "wait a bit" limit: the key needs billing enabled.
+    throw new ImageUnavailable("AI outfits need a Gemini key with image quota (billing enabled). Choose “Keep my outfit” for now.");
+  }
   if (!res.ok) throw new Error(`Image request failed (${res.status})`);
   const data = (await res.json()) as { candidates?: { content?: { parts?: { inlineData?: { mimeType: string; data: string }; inline_data?: { mime_type: string; data: string } }[] } }[] };
   for (const part of data.candidates?.[0]?.content?.parts ?? []) {
