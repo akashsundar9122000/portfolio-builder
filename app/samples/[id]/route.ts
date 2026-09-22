@@ -17,6 +17,6 @@ export function generateStaticParams() {
 export async function GET(_req: Request, ctx: RouteContext<"/samples/[id]">) {
   const sample = sampleById((await ctx.params).id);
   if (!sample) return new Response("Not found", { status: 404 });
-  const html = renderSite(sample.draft(), themeById(sample.themeId), { covers: {} });
+  const html = renderSite(sample.draft(), themeById(sample.themeId), { covers: {}, portrait: { src: sample.photo, kind: "framed" } });
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

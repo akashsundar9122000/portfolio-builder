@@ -3,8 +3,9 @@ import { emptyDraft } from "./defaults";
 
 /**
  * The three example portfolios on the landing page — different people,
- * different careers, different themes. Fictional, and rendered with no
- * photo or voice so they're pure `renderSite` output.
+ * different careers, different themes. Fictional people with AI-generated
+ * portraits (public/sample-photos), rendered by the same `renderSite` as a
+ * real download.
  */
 
 export interface Sample {
@@ -14,6 +15,8 @@ export interface Sample {
   themeId: string;
   themeName: string;
   blurb: string;
+  /** AI-generated portrait of this fictional person, served from /public */
+  photo: string;
   draft: () => Draft;
 }
 
@@ -159,9 +162,9 @@ function student(): Draft {
 }
 
 export const SAMPLES: Sample[] = [
-  { id: "developer", name: "Arjun Mehta", role: "Full-stack Developer", themeId: "midnight-indigo", themeName: "Midnight Indigo", blurb: "Five years of shipping SaaS — projects with real metrics, a clear career timeline.", draft: developer },
-  { id: "marketer", name: "Priya Nair", role: "Marketing Manager", themeId: "sunset-coral", themeName: "Sunset Coral", blurb: "Campaigns and brand launches told as stories, with the numbers that prove them.", draft: marketer },
-  { id: "student", name: "Rahul Das", role: "Computer Science Graduate", themeId: "paper-ink", themeName: "Paper & Ink", blurb: "A fresher’s first portfolio: projects, internship, grades and hackathons.", draft: student },
+  { id: "developer", photo: "/sample-photos/developer.jpg", name: "Arjun Mehta", role: "Full-stack Developer", themeId: "midnight-indigo", themeName: "Midnight Indigo", blurb: "Five years of shipping SaaS — projects with real metrics, a clear career timeline.", draft: developer },
+  { id: "marketer", photo: "/sample-photos/marketer.jpg", name: "Priya Nair", role: "Marketing Manager", themeId: "sunset-coral", themeName: "Sunset Coral", blurb: "Campaigns and brand launches told as stories, with the numbers that prove them.", draft: marketer },
+  { id: "student", photo: "/sample-photos/student.jpg", name: "Rahul Das", role: "Computer Science Graduate", themeId: "paper-ink", themeName: "Paper & Ink", blurb: "A fresher’s first portfolio: projects, internship, grades and hackathons.", draft: student },
 ];
 
 export const sampleById = (id: string) => SAMPLES.find((s) => s.id === id);
