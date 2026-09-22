@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Eye, Loader2 } from "lucide-react";
 import { useDraft } from "@/lib/builder/store";
 import type { Draft } from "@/lib/builder/schema";
 import { useBuilderSession } from "./use-session";
+import { BrandLogo } from "@/components/brand";
 import { UiThemeToggle } from "@/components/ui-theme";
 import { useEffect } from "react";
 import { markVisited, useVisited } from "./visited";
@@ -76,7 +77,7 @@ export function Wizard() {
     <div className="spot-bg min-h-svh">
       <header className="border-hair sticky top-0 z-20 border-b bg-[color-mix(in_srgb,var(--bg)_85%,transparent)] backdrop-blur">
         <div className="mx-auto flex w-[min(1240px,100%-2rem)] items-center justify-between gap-3 py-2">
-          <Link href="/" className="label text-text tap flex min-h-11 items-center">FolioForge</Link>
+          <Link href="/" className="tap flex min-h-11 items-center" aria-label="FolioForge home"><BrandLogo size={30} /></Link>
           <div className="flex items-center gap-2">
             <UiThemeToggle />
             <Link href="/studio" className="btn btn-primary"><Eye className="size-4" aria-hidden /> Preview</Link>

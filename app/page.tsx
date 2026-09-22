@@ -6,6 +6,7 @@ import { Samples } from "@/components/landing/samples";
 import { SAMPLES } from "@/lib/builder/samples";
 import { UiThemeToggle } from "@/components/ui-theme";
 import { HeroShowcase } from "@/components/landing/hero-showcase";
+import { BrandLogo } from "@/components/brand";
 
 const STEPS = [
   { icon: Camera, title: "Your photo", body: "Upload a portrait. It’s cut out and staged under a spotlight — dressed in a professional look where AI outfits are enabled." },
@@ -32,7 +33,7 @@ export default function Home() {
     <main className="spot-bg min-h-svh overflow-x-clip">
       <div className="mx-auto w-[min(1180px,100%-2.5rem)] py-[clamp(3rem,9vh,7rem)]">
         <div className="flex items-center justify-between gap-4">
-          <p className="label text-accent">FolioForge · by Akash Sundar</p>
+          <BrandLogo size={40} byline />
           <UiThemeToggle />
         </div>
         <div className="mt-6 grid items-center gap-x-12 gap-y-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
