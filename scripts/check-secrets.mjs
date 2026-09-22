@@ -6,8 +6,12 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
+// public by design: shown on the landing page or used in links, not secrets
+const PUBLIC = new Set(["MAIL_FROM", "ADMIN_EMAIL", "GMAIL_USER", "APP_URL", "SMTP_HOST", "SMTP_PORT"]);
 const secrets = [".env", ".env.local"].some((f) => existsSync(f))
-  ? [".env", ".env.local"].filter((f) => existsSync(f)).map((f) => readFileSync(f, "utf8")).join("\n").split("\n").map((l) => l.split("=").slice(1).join("=").trim()).filter((v) => v.length >= 12)
+  ? [".env", ".env.local"].filter((f) => existsSync(f)).map((f) => readFileSync(f, "utf8")).join("\n").split("\n")
+      .filter((l) => !PUBLIC.has(l.split("=")[0].trim()))
+      .map((l) => l.split("=").slice(1).join("=").trim()).filter((v) => v.length >= 12)
   : [];
 const shapes = [/nvapi-[A-Za-z0-9_-]{20,}/, /AIza[0-9A-Za-z_-]{30,}/, /AQ\.[A-Za-z0-9_-]{30,}/, /sk-[A-Za-z0-9]{24,}/];
 

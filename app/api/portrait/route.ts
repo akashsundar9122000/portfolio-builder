@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   const limited = await rateLimit(session.code);
   if (limited) return limited;
-  if (!(await consume(session.code, "portrait", session.portraits))) return fail("This invite code has used all its portrait generations.", 429);
+  if (!(await consume(session.code, "portrait", session.portraits))) return fail("This code has used all its AI portrait generations.", 429);
 
   const result = await imageGateway().service.start(
     {

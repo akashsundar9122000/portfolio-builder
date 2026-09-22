@@ -7,18 +7,23 @@ import { setBuilderFeatures } from "./features";
 
 export interface Features { text: boolean; image: boolean; generate: boolean }
 
-/** Loads the draft and checks the invite session; sends people without one back to the start. */
-export function useBuilderSession(): { ready: boolean; features: Features } {
+/** How the person signed in: a permanent master code, or an emailed single-portfolio code. */
+export type Access = { kind: "master" } | { kind: "issued"; email: string; downloads: ("html" | "zip")[] };
+
+interface State { ready: boolean; features: Features; access: Access }
+
+/** Loads the draft and checks the invite session; sends people without one back to the start, saying why. */
+export function useBuilderSession(): State {
   const router = useRouter();
-  const [state, setState] = useState<{ ready: boolean; features: Features }>({ ready: false, features: { text: false, image: false, generate: false } });
+  const [state, setState] = useState<State>({ ready: false, features: { text: false, image: false, generate: false }, access: { kind: "master" } });
   useEffect(() => {
     let live = true;
     void (async () => {
       const [res] = await Promise.all([fetch("/api/session").then((r) => r.json()).catch(() => ({ active: false })), loadDraft()]);
       if (!live) return;
-      if (!res.active) { router.replace("/?expired=1"); return; }
+      if (!res.active) { router.replace(`/?expired=${res.ended ?? "1"}#access`); return; }
       setBuilderFeatures(res.features);
-      setState({ ready: true, features: res.features });
+      setState({ ready: true, features: res.features, access: res.access ?? { kind: "master" } });
     })();
     return () => { live = false; };
   }, [router]);
