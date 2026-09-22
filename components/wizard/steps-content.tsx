@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, FileText, Loader2, Sparkles, Trash2, Upload } from "lucide-react";
 import { Chips, Field, TextArea, TextInput, Toggle } from "@/components/form/fields";
 import { Repeater } from "@/components/form/repeater";
-import { mutate, putBlob, update, useDraft } from "@/lib/builder/store";
+import { blobUrl, mutate, putBlob, update, useDraft } from "@/lib/builder/store";
 import { uid } from "@/lib/builder/defaults";
 import { SOCIAL_KINDS, type AwardItem, type EducationItem, type ExperienceItem, type ProjectItem, type SkillGroupItem } from "@/lib/builder/schema";
 import { aiWrite, summarize } from "@/lib/builder/ai-client";
@@ -155,6 +155,35 @@ export function StepEducation() {
   );
 }
 
+/** The project's cover as it will appear on the card (16:10), or its placeholder. */
+function CoverThumb({ refId, title, busy }: { refId: string | null; title: string; busy: boolean }) {
+  const [src, setSrc] = useState<string>();
+  useEffect(() => {
+    let live = true;
+    if (refId) void blobUrl(refId).then((u) => live && setSrc(u));
+    return () => { live = false; };
+  }, [refId]);
+  const initials = title.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "•";
+  return (
+    <div className="border-hair bg-sunken relative aspect-[16/10] w-full max-w-md overflow-hidden rounded-xl border">
+      {refId && src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={`${title || "Project"} cover`} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full items-end p-4" style={{ background: "radial-gradient(90% 90% at 80% 10%, rgba(235,168,77,0.25), transparent 60%), linear-gradient(135deg, var(--surface-raised), var(--bg-sunken))" }}>
+          <span className="display grad text-5xl" aria-hidden>{initials}</span>
+          <span className="label absolute right-3 top-3">Designed cover</span>
+        </div>
+      )}
+      {busy && (
+        <div className="absolute inset-0 grid place-items-center bg-black/55 backdrop-blur-[2px]">
+          <Loader2 className="text-accent size-6 animate-spin" aria-hidden />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CoverField({ index }: { index: number }) {
   const d = useDraft();
   const features = useBuilderFeatures();
@@ -184,6 +213,7 @@ function CoverField({ index }: { index: number }) {
 
   return (
     <Field label="Cover image (optional)" hint="Upload a screenshot, or generate an illustration. Without either, a designed cover with the project’s initials is used.">
+      <CoverThumb refId={p.cover} title={p.title} busy={busy} />
       <div className="flex flex-wrap items-center gap-2">
         {features.generate && (
           <button type="button" className="btn" disabled={busy || !p.title.trim()} onClick={generate} title={p.title.trim() ? undefined : "Name the project first"}>
