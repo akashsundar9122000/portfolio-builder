@@ -31,7 +31,7 @@ export default function Home() {
           <Suspense>
             <InviteForm />
           </Suspense>
-          <p className="text-text-3 mt-4 text-sm">Invite only for now — ask Akash for a code.</p>
+          <p className="text-text-3 mt-3 text-sm">Invite only for now — ask Akash for a code.</p>
         </div>
 
         <ol className="mt-[clamp(4rem,10vh,7rem)] grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
