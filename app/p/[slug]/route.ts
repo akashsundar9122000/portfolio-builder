@@ -1,10 +1,18 @@
 import { readHtml, resolveSlug } from "@/lib/server/sites";
 import { footer, notice, siteHeaders } from "@/lib/server/site-pages";
 
-/** A published portfolio: /p/<name>. Old names redirect to the current one. */
+/**
+ * A published portfolio: /p/<name>. Old names redirect to the current one.
+ *
+ * Never cached at the edge: a take-down (ours or the owner's) has to be
+ * immediate, and a cached copy outlives the delete. Every view is one KV
+ * read, which the free plan has plenty of room for.
+ */
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request, ctx: RouteContext<"/p/[slug]">) {
   const slug = (await ctx.params).slug.toLowerCase();
-  const html = (status: number, body: string, cache = "no-store") =>
+  const html = (status: number, body: string, cache = "no-store, must-revalidate") =>
     new Response(body, { status, headers: siteHeaders({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": cache }) });
 
   try {
@@ -15,8 +23,7 @@ export async function GET(req: Request, ctx: RouteContext<"/p/[slug]">) {
     const page = await readHtml(hit.site.id);
     if (!page) return html(410, notice("This portfolio is no longer online", "Its owner or FolioForge has taken it down."));
     const text = new TextDecoder().decode(page).replace("</body>", `${footer(hit.site.slug)}</body>`);
-    // a short shared cache: fast for visitors, and updates or take-downs show within a minute
-    return html(200, text, "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
+    return html(200, text);
   } catch (e) {
     console.error(JSON.stringify({ route: "p", error: String(e) }));
     return html(503, notice("Couldn’t load this portfolio", "Please try again in a minute."));
