@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FolioForge — reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@88,700;88,800&family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+  /*
+   * The reel, drawn deterministically: nothing animates by itself. The build
+   * script calls render(t) for every frame it wants, so a frame is the same
+   * whenever it's rendered and the film can be cut to the voice.
+   */
+  :root {
+    --bg: #07070a; --ink: #f6f4ef; --muted: #b9b3a9; --accent: #eba84d; --accent-2: #f7d58c;
+    --display: Archivo, system-ui, sans-serif; --sans: "Instrument Sans", system-ui, sans-serif; --mono: "JetBrains Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .glow { position: absolute; inset: -20% -30% auto; height: 1100px; background: radial-gradient(ellipse at 50% 30%, rgba(235,168,77,.20), transparent 62%); }
+  .scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 780px; background: linear-gradient(180deg, transparent, rgba(4,4,6,.72) 42%, rgba(4,4,6,.94)); }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.65)); }
+
+  .scene { position: absolute; inset: 0; opacity: 0; will-change: opacity, transform; }
+  .stack { position: absolute; inset: 0; display: grid; place-items: center; }
+
+  /* device frames */
+  .phone { width: 560px; border-radius: 62px; padding: 14px; background: linear-gradient(160deg, #26262b, #0e0e11); box-shadow: 0 60px 120px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06); }
+  .phone .screen { position: relative; overflow: hidden; border-radius: 50px; background: #000; aspect-ratio: 430 / 932; }
+  .phone img { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+  .laptop { width: 980px; transform-origin: 44% 56%; border-radius: 22px; overflow: hidden; background: #141417; box-shadow: 0 60px 140px -40px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.07); }
+  .laptop .bar { display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 20px; background: #191920; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .laptop .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3a42; display: block; }
+  .laptop .bar i:nth-child(1) { background: #ff5f57; } .laptop .bar i:nth-child(2) { background: #febc2e; } .laptop .bar i:nth-child(3) { background: #28c840; }
+  .laptop .bar span { margin: 0 auto; font-family: var(--mono); font-size: 15px; color: #8b8b95; }
+  .laptop .shot { position: relative; overflow: hidden; }
+  .laptop img { width: 100%; display: block; }
+
+  /* type */
+  .caption { position: absolute; left: 72px; right: 72px; bottom: 210px; font-family: var(--display); font-weight: 800; font-stretch: 88%;
+             font-size: 88px; line-height: 1.0; letter-spacing: -.02em; text-transform: uppercase; white-space: pre-line; text-shadow: 0 18px 60px rgba(0,0,0,.75); }
+  .caption em { font-style: normal; background: linear-gradient(100deg, var(--accent-2), var(--accent) 60%, #d98a2b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .kicker { position: absolute; left: 72px; bottom: 150px; font-family: var(--mono); font-size: 26px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .big { font-family: var(--display); font-weight: 800; font-stretch: 88%; text-transform: uppercase; letter-spacing: -.02em; line-height: .95; }
+
+  /* brand */
+  .brand { position: absolute; top: 96px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .brand img { width: 64px; height: 64px; border-radius: 16px; }
+  .brand span { font-size: 34px; letter-spacing: .14em; font-weight: 500; }
+  .brand b { color: var(--accent); font-weight: 500; }
+
+  .chip { display: inline-flex; align-items: center; gap: 14px; padding: 20px 34px; border-radius: 999px; border: 1px solid rgba(235,168,77,.45);
+          background: rgba(235,168,77,.10); font-family: var(--mono); font-size: 30px; color: var(--accent-2); }
+  .cta { text-align: center; }
+  .cta .mark { width: 200px; height: 200px; border-radius: 48px; margin: 0 auto 48px; display: block; }
+  .cta h1 { font-size: 124px; }
+  .cta .url { margin-top: 36px; font-family: var(--mono); font-size: 40px; color: var(--accent); letter-spacing: .02em; }
+  .cta .ask { margin-top: 64px; font-size: 44px; color: var(--muted); }
+  .cta .ask b { color: var(--ink); }
+
+  /* the "send a link" chat */
+  .chat { position: absolute; inset: 0; padding: 120px 34px 40px; display: flex; flex-direction: column; gap: 26px; font-size: 27px; }
+  .chat-top { text-align: center; font-family: var(--mono); font-size: 20px; letter-spacing: .12em; text-transform: uppercase; color: #6f6f7a; margin-bottom: 14px; }
+  .bubble { max-width: 86%; padding: 22px 26px; border-radius: 28px; line-height: 1.35; }
+  .bubble.in { align-self: flex-start; background: #1b1b21; border-bottom-left-radius: 10px; color: #e9e6e0; }
+  .bubble.out { align-self: flex-end; background: linear-gradient(160deg, #eba84d, #d98a2b); color: #14120e; border-bottom-right-radius: 10px; font-weight: 500; }
+  .link-card { background: rgba(0,0,0,.18); border-radius: 18px; overflow: hidden; margin-bottom: 16px; }
+  .link-card img { position: static; width: 100%; height: 210px; object-fit: cover; object-position: 50% 0; display: block; }
+  .link-meta { padding: 16px 18px; display: grid; gap: 6px; }
+  .link-meta b { font-size: 24px; font-weight: 600; }
+  .link-meta span { font-family: var(--mono); font-size: 20px; opacity: .72; }
+
+  .paper { width: 460px; height: 600px; border-radius: 10px; background: linear-gradient(180deg, #f4f1ea, #ddd8cd); position: relative; box-shadow: 0 50px 120px -40px rgba(0,0,0,.9); }
+  .paper::before { content: "PDF"; position: absolute; inset: auto 0 34px; text-align: center; font-family: var(--mono); font-size: 30px; letter-spacing: .3em; color: #8b8378; }
+  .paper .lines { position: absolute; inset: 64px 56px auto; display: grid; gap: 22px; }
+  .paper .lines i { display: block; height: 16px; border-radius: 4px; background: #c9c3b7; }
+  .paper .lines i:nth-child(1) { width: 62%; height: 26px; background: #9a948a; }
+  .paper .lines i:nth-child(4) { width: 80%; } .paper .lines i:nth-child(6) { width: 54%; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glow"></div>
+
+  <!-- 1. the hook: a resume nobody opens -->
+  <section class="scene" data-scene="hook">
+    <div class="stack"><div class="paper" id="paper"><div class="lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+  </section>
+
+  <!-- 2. the product -->
+  <section class="scene" data-scene="logo">
+    <div class="stack" style="align-content:center">
+      <div style="text-align:center">
+        <img id="logo-mark" src="../../public/brand/folioforge-mark.svg" width="220" height="220" style="border-radius:52px">
+        <div class="big" style="font-size:118px;margin-top:40px">Folio<span style="color:var(--accent)">Forge</span></div>
+        <div class="chip" style="margin-top:44px">Your portfolio, in minutes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3–5. the builder, on a phone -->
+  <section class="scene" data-scene="photo"><div class="stack"><div class="phone"><div class="screen"><img src="../../.work/reel/shots/step-photo.png"></div></div></div></section>
+  <section class="scene" data-scene="voice"><div class="stack"><div class="phone"><div class="screen"><img src="../../.work/reel/shots/step-voice.png"></div></div></div></section>
+  <section class="scene" data-scene="theme"><div class="stack"><div class="phone"><div class="screen"><img id="theme-img" src="../../.work/reel/shots/step-theme.png"></div></div></div></section>
+
+  <!-- 6–7. the studio and publishing -->
+  <section class="scene" data-scene="studio">
+    <div class="stack"><div class="laptop" id="studio-frame"><div class="bar"><i></i><i></i><i></i><span>folioforge · studio</span></div><div class="shot"><img src="../../.work/reel/shots/studio.png"></div></div></div>
+  </section>
+  <section class="scene" data-scene="publish">
+    <div class="stack"><div class="laptop" id="publish-frame"><div class="bar"><i></i><i></i><i></i><span>folioforge · studio</span></div><div class="shot"><img src="../../.work/reel/shots/publish.png"></div></div></div>
+  </section>
+
+  <!-- 8–9. the finished site -->
+  <section class="scene" data-scene="site"><div class="stack"><div class="phone"><div class="screen"><img id="site-scroll" src="../../.work/reel/shots/site-full.png"></div></div></div></section>
+  <section class="scene" data-scene="send">
+    <div class="stack">
+      <div class="phone" style="width:620px"><div class="screen" style="background:#0d0d10">
+        <div class="chat">
+          <div class="chat-top">Recruiter · now</div>
+          <div class="bubble in">Can you send your resume?</div>
+          <div class="bubble out" id="send-bubble">
+            <div class="link-card">
+              <img src="../../.work/reel/shots/site-hero.png">
+              <div class="link-meta"><b>Arjun Mehta — Full-stack Developer</b><span>folioforge-app.vercel.app</span></div>
+            </div>
+            Here's my portfolio 👇
+          </div>
+          <div class="bubble in" id="send-reply">Whoa. This is great.</div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 10. the ask -->
+  <section class="scene" data-scene="cta">
+    <div class="stack">
+      <div class="cta">
+        <img class="mark" src="../../public/brand/folioforge-mark.svg">
+        <h1 class="big">Build yours<br><em style="font-style:normal;color:var(--accent)">free</em></h1>
+        <div class="url">folioforge-app.vercel.app</div>
+        <div class="ask">Comment <b>CODE</b> for an access code</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="vignette"></div>
+  <div class="scrim"></div>
+  <div class="brand" id="brand"><img src="../../public/brand/folioforge-mark.svg"><span>Folio<b>Forge</b></span></div>
+  <div class="caption" id="caption"></div>
+  <div class="kicker" id="kicker"></div>
+</div>
+
+<script>
+/* The timeline the build script writes: [{ id, scene, caption, start, end }] */
+const T = window.TIMELINE ?? [];
+const DUR = T.length ? T[T.length - 1].end : 0;
+const stage = document.getElementById("stage");
+const scenes = new Map([...document.querySelectorAll(".scene")].map((el) => [el.dataset.scene, el]));
+const caption = document.getElementById("caption");
+const kicker = document.getElementById("kicker");
+const brand = document.getElementById("brand");
+
+const el = (id) => document.getElementById(id) ?? { style: {} }; // scenes come and go; render must not
+const clamp = (n, a = 0, b = 1) => Math.min(b, Math.max(a, n));
+const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const lerp = (a, b, p) => a + (b - a) * p;
+/** Fades in over `inT`, out over `outT`, 1 in between. */
+const band = (p, inT, outT) => Math.min(ease(clamp(p / inT)), ease(clamp((1 - p) / outT)));
+
+/* Highlight the last word of a caption line, so the type has a focal point. */
+function markup(text) {
+  const lines = text.split("\n");
+  return lines.map((l, i) => (i === lines.length - 1 ? l.replace(/(\S+)\s*$/, "<em>$1</em>") : l)).join("\n");
+}
+
+const OVERLAP = 0.32; // scenes cross-fade through each other — never to black
+
+function alphaFor(beat, t) {
+  // the end card carries type of its own, so it arrives quickly rather than
+  // washing over the scene before it
+  const OV = beat.scene === "cta" ? 0.16 : OVERLAP;
+  const inA = ease(clamp((t - (beat.start - OV / 2)) / OV));
+  const outA = ease(clamp(((beat.end + OV / 2) - t) / OV));
+  return Math.min(inA, outA);
+}
+
+function render(t) {
+  const i = Math.max(0, T.findIndex((b) => t >= b.start && t < b.end));
+  const beat = T[i] ?? T[T.length - 1];
+  if (!beat) return;
+  const p = clamp((t - beat.start) / (beat.end - beat.start));
+
+  // every scene gets its own alpha, so the outgoing one is still there
+  const alpha = new Map();
+  for (const b of T) alpha.set(b.scene, Math.max(alpha.get(b.scene) ?? 0, alphaFor(b, t)));
+  for (const [name, el] of scenes) {
+    const a = alpha.get(name) ?? 0;
+    el.style.opacity = a;
+    el.style.transform = a > 0 ? `scale(${lerp(1.02, 1.07, p)})` : "scale(1)";
+  }
+
+  // per-scene motion
+  const paper = el("paper");
+  paper.style.transform = `rotate(${lerp(-3, 2, p)}deg) translateY(${lerp(40, -30, p)}px) scale(${lerp(1, 0.92, p)})`;
+  paper.style.filter = `blur(${lerp(0, 6, clamp((p - 0.6) / 0.4))}px)`;
+
+  el("site-scroll").style.transform = `translateY(${lerp(-1, -13, p)}%)`;
+  el("theme-img").style.transform = `translateY(${lerp(0, -18, p)}%)`;
+  el("studio-frame").style.transform = `perspective(2200px) rotateY(${lerp(8, -2, p)}deg) rotateX(${lerp(3, 0, p)}deg) scale(${lerp(0.98, 1.05, p)}) translateY(${lerp(2, -5, p)}%)`;
+  el("publish-frame").style.transform = `scale(${lerp(1.15, 1.42, p)}) translateY(${lerp(2, -2, p)}%)`;
+
+  // the chat lands one bubble at a time
+  const bubbleIn = ease(clamp((p - 0.18) / 0.22));
+  const replyIn = ease(clamp((p - 0.55) / 0.25));
+  const bubble = el("send-bubble");
+  bubble.style.opacity = bubbleIn;
+  bubble.style.transform = `translateY(${lerp(30, 0, bubbleIn)}px) scale(${lerp(0.96, 1, bubbleIn)})`;
+  const reply = el("send-reply");
+  reply.style.opacity = replyIn;
+  reply.style.transform = `translateY(${lerp(24, 0, replyIn)}px)`;
+
+  const logoIn = ease(clamp(p / 0.5));
+  el("logo-mark").style.transform = `scale(${lerp(0.9, 1.05, logoIn)}) rotate(${lerp(-6, 0, logoIn)}deg)`;
+
+  // captions, cross-fading on the same clock as the scenes
+  const showCaption = beat.scene !== "cta";
+  const a = alphaFor(beat, t);
+  caption.innerHTML = showCaption ? markup(beat.caption) : "";
+  caption.style.opacity = showCaption ? a : 0;
+  caption.style.transform = `translateY(${lerp(26, 0, ease(clamp(p / 0.18)))}px)`;
+  kicker.textContent = showCaption ? `${String(i + 1).padStart(2, "0")} / ${String(T.length).padStart(2, "0")}` : "";
+  kicker.style.opacity = showCaption ? 0.9 * a : 0;
+  brand.style.opacity = beat.scene === "cta" || beat.scene === "logo" ? 0 : 0.55 * a;
+}
+
+window.render = render;
+window.FILM_DURATION = DUR;
+if (DUR) render(0);
+</script>
+</body>
+</html>
