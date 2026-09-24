@@ -40,10 +40,15 @@ export function UiThemeToggle({ className = "" }: { className?: string }) {
       type="button"
       onClick={() => apply(next)}
       className={`btn size-11 shrink-0 px-0 ${className}`}
-      aria-label={`Switch to ${next} mode`}
+      // aria-pressed carries the state, so the label names the state and
+      // the action rather than the action alone
+      aria-pressed={theme === "dark"}
+      aria-label={theme === "dark" ? "Dark mode active. Switch to light." : "Light mode active. Switch to dark."}
       title={`Switch to ${next} mode`}
     >
-      {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
+      {/* the icon shows the CURRENT mode — a moon at night — not the one
+          the button would switch to */}
+      {theme === "dark" ? <Moon className="size-4" aria-hidden /> : <Sun className="size-4" aria-hidden />}
     </button>
   );
 }
