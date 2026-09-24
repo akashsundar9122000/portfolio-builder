@@ -72,6 +72,24 @@ await wide.waitForTimeout(2500);
 await wide.screenshot({ path: `${OUT}/publish.png` });
 console.log("  publish");
 
+// the same screens on a laptop, so the film shows both sizes
+const desk = await ctx.newPage();
+await desk.setViewportSize({ width: 1440, height: 900 });
+await desk.goto(`${BASE}/build?step=basics`, { waitUntil: "networkidle" });
+await desk.waitForTimeout(1400);
+await desk.screenshot({ path: `${OUT}/desk-build.png` });
+console.log("  desk-build");
+await desk.goto(`${BASE}/`, { waitUntil: "networkidle" });
+await desk.waitForTimeout(1600);
+await desk.screenshot({ path: `${OUT}/desk-landing.png` });
+console.log("  desk-landing");
+await desk.goto(`${BASE}/samples/developer`, { waitUntil: "networkidle" });
+await desk.evaluate(() => document.querySelectorAll("[data-reveal]").forEach((e) => e.classList.add("in")));
+await desk.waitForTimeout(1600);
+await desk.screenshot({ path: `${OUT}/desk-site.png` });
+await desk.screenshot({ path: `${OUT}/desk-site-full.png`, fullPage: true });
+console.log("  desk-site");
+
 // the finished portfolio, on a phone
 await page.goto(`${BASE}/samples/developer`, { waitUntil: "networkidle" });
 await shot("site-hero", { settle: 1500 });

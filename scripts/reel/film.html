@@ -60,6 +60,11 @@
   .cta .ask { margin-top: 64px; font-size: 44px; color: var(--muted); }
   .cta .ask b { color: var(--ink); }
 
+  /* laptop with a phone leaning in front of it */
+  .dual { position: relative; width: 980px; height: 900px; display: grid; place-items: center; }
+  .dual .laptop { position: absolute; top: 120px; left: 0; }
+  .dual .phone.float { position: absolute; right: 10px; bottom: 60px; box-shadow: 0 50px 110px -20px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.07); }
+
   /* the "send a link" chat */
   .chat { position: absolute; inset: 0; padding: 120px 34px 40px; display: flex; flex-direction: column; gap: 26px; font-size: 27px; }
   .chat-top { text-align: center; font-family: var(--mono); font-size: 20px; letter-spacing: .12em; text-transform: uppercase; color: #6f6f7a; margin-bottom: 14px; }
@@ -113,7 +118,29 @@
     <div class="stack"><div class="laptop" id="publish-frame"><div class="bar"><i></i><i></i><i></i><span>folioforge · studio</span></div><div class="shot"><img src="../../.work/reel/shots/publish.png"></div></div></div>
   </section>
 
+  <!-- the builder at both sizes -->
+  <section class="scene" data-scene="dual-build">
+    <div class="stack">
+      <div class="dual">
+        <div class="laptop" id="dual-laptop" style="width:900px"><div class="bar"><i></i><i></i><i></i><span>folioforge · build</span></div><div class="shot"><img src="../../.work/reel/shots/desk-build.png"></div></div>
+        <div class="phone float" id="dual-phone" style="width:300px"><div class="screen"><img src="../../.work/reel/shots/step-basics.png"></div></div>
+      </div>
+    </div>
+  </section>
+
   <!-- 8–9. the finished site -->
+  <section class="scene" data-scene="site-desktop">
+    <div class="stack"><div class="laptop" id="site-desk-frame" style="width:1240px"><div class="bar"><i></i><i></i><i></i><span>folioforge-app.vercel.app/p/arjun-mehta</span></div><div class="shot" style="height:880px"><img id="site-desk-scroll" src="../../.work/reel/shots/desk-site-full.png"></div></div></div>
+  </section>
+  <section class="scene" data-scene="dual-site">
+    <div class="stack">
+      <div class="dual">
+        <div class="laptop" id="resp-laptop" style="width:880px"><div class="bar"><i></i><i></i><i></i><span>arjun-mehta</span></div><div class="shot"><img src="../../.work/reel/shots/desk-site.png"></div></div>
+        <div class="phone float" id="resp-phone" style="width:290px"><div class="screen"><img src="../../.work/reel/shots/site-hero.png"></div></div>
+      </div>
+    </div>
+  </section>
+
   <section class="scene" data-scene="site"><div class="stack"><div class="phone"><div class="screen"><img id="site-scroll" src="../../.work/reel/shots/site-full.png"></div></div></div></section>
   <section class="scene" data-scene="send">
     <div class="stack">
@@ -211,6 +238,14 @@ function render(t) {
   el("theme-img").style.transform = `translateY(${lerp(0, -18, p)}%)`;
   el("studio-frame").style.transform = `perspective(2200px) rotateY(${lerp(8, -2, p)}deg) rotateX(${lerp(3, 0, p)}deg) scale(${lerp(0.98, 1.05, p)}) translateY(${lerp(2, -5, p)}%)`;
   el("publish-frame").style.transform = `scale(${lerp(1.15, 1.42, p)}) translateY(${lerp(2, -2, p)}%)`;
+
+  // the paired laptop/phone shots, leaning in
+  el("dual-laptop").style.transform = `perspective(2400px) rotateY(${lerp(7, 1, p)}deg) translateY(${lerp(10, -10, p)}px) scale(${lerp(0.98, 1.03, p)})`;
+  el("dual-phone").style.transform = `translateY(${lerp(30, -14, p)}px) rotate(${lerp(4, 1.5, p)}deg)`;
+  el("resp-laptop").style.transform = `perspective(2400px) rotateY(${lerp(-6, 0, p)}deg) translateY(${lerp(8, -8, p)}px) scale(${lerp(0.99, 1.04, p)})`;
+  el("resp-phone").style.transform = `translateY(${lerp(34, -10, p)}px) rotate(${lerp(-4, -1, p)}deg)`;
+  el("site-desk-scroll").style.transform = `translateY(${lerp(-0.5, -7, p)}%)`;
+  el("site-desk-frame").style.transform = `translateY(${lerp(-40, -90, p)}px) scale(${lerp(1, 1.04, p)})`;
 
   // the chat lands one bubble at a time
   const bubbleIn = ease(clamp((p - 0.18) / 0.22));
